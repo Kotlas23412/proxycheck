@@ -58,6 +58,13 @@ STRIP_ADD_LTE_MARK = (os.environ.get("STRIP_VPN_COMMENTS_LTE_MARK") or "1").stri
     "yes",
     "on",
 )
+# Если включено, страну берем только из онлайн-источника (ip-api), без fallback на MMDB.
+STRIP_ONLINE_GEO_ONLY = (os.environ.get("STRIP_VPN_COMMENTS_ONLINE_ONLY") or "0").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
 
 def strip_comment_from_line(line: str) -> str:
     """Убирает из строки фрагмент (комментарий) после первого '#'."""
@@ -255,7 +262,7 @@ def process_file(
                 cc, country_name = geo_cache.get(ip, ("", "")) if ip else ("", "")
                 if not cc and ip:
                     cc, country_name = fetch_country_for_ip(ip, geo_cache)
-                if not cc and ip:
+                if not cc and ip and not STRIP_ONLINE_GEO_ONLY:
                     cc, country_name = _cc_from_mmdb(ip, STRIP_GEO_MMDB, mmdb_cache, reader_holder)
                 is_lte = _ip_in_cidr(ip, cidr_networks)
 
