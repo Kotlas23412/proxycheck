@@ -251,12 +251,12 @@ def process_file(
                 is_lte = False
             else:
                 ip = host_to_ip.get(host, "") if host else ""
-                # Максимально точное определение страны: сначала локальный MMDB, затем ip-api.
-                cc, country_name = _cc_from_mmdb(ip, STRIP_GEO_MMDB, mmdb_cache, reader_holder)
-                if not cc and ip:
-                    cc, country_name = geo_cache.get(ip, ("", ""))
+                # Для актуальности предпочитаем ip-api (кэш), MMDB используем как резерв.
+                cc, country_name = geo_cache.get(ip, ("", "")) if ip else ("", "")
                 if not cc and ip:
                     cc, country_name = fetch_country_for_ip(ip, geo_cache)
+                if not cc and ip:
+                    cc, country_name = _cc_from_mmdb(ip, STRIP_GEO_MMDB, mmdb_cache, reader_holder)
                 is_lte = _ip_in_cidr(ip, cidr_networks)
 
             flag = country_code_to_flag(cc)
