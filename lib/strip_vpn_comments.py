@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 Убирает комментарии (фрагмент после #) в VPN-конфигах построчно и добавляет новый:
-  # <флаг_страны><AUTO_COMMENT>
-Страна определяется по IP хоста прокси (ip-api.com).
+  # <флаг_страны>[ | LTE] <AUTO_COMMENT>
+Страна определяется по IP хоста прокси (локальный MMDB -> fallback ip-api.com).
+Пометка "| LTE" добавляется, если IP endpoint попадает в подсети из cidrlist.
 AUTO_COMMENT задаётся переменной окружения (см. .env и workflow).
 """
 
 import argparse
+import ipaddress
 import os
 import socket
 import sys
@@ -47,6 +49,18 @@ STRIP_FAST = (os.environ.get("STRIP_VPN_COMMENTS_FAST") or "").strip().lower() i
 )
 # Код страны по умолчанию для быстрого режима (например, RU), пусто = глобус.
 STRIP_CC_DEFAULT = (os.environ.get("STRIP_VPN_COMMENTS_CC") or "").strip().upper()
+STRIP_GEO_MMDB = (
+    (os.environ.get("GEOIP_MMDB") or "").strip()
+    or (os.environ.get("STRIP_VPN_COMMENTS_GEO_MMDB") or "").strip()
+    or os.path.join("configs", "dbip-country-lite.mmdb")
+)
+STRIP_CIDR_FILE = (os.environ.get("STRIP_VPN_COMMENTS_CIDR_FILE") or "").strip() or "cidrlist"
+STRIP_ADD_LTE_MARK = (os.environ.get("STRIP_VPN_COMMENTS_LTE_MARK") or "1").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
 
 
 def get_auto_comment() -> str:
@@ -123,6 +137,57 @@ def fetch_country_for_ip(ip: str, cache: dict) -> str:
         return ""
 
 
+def _load_cidr_networks(path: str) -> list[ipaddress.IPv4Network | ipaddress.IPv6Network]:
+    nets: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
+    if not path or not os.path.isfile(path):
+        return nets
+    with open(path, encoding="utf-8") as f:
+        for raw in f:
+            line = raw.strip()
+            if not line or line.startswith("#"):
+                continue
+            try:
+                nets.append(ipaddress.ip_network(line, strict=False))
+            except ValueError:
+                continue
+    return nets
+
+
+def _ip_in_cidr(ip_text: str, networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network]) -> bool:
+    if not ip_text or not networks:
+        return False
+    try:
+        ip_obj = ipaddress.ip_address(ip_text)
+    except ValueError:
+        return False
+    return any(ip_obj in net for net in networks)
+
+
+def _cc_from_mmdb(ip: str, mmdb_path: str, mmdb_cache: dict[str, str], reader_holder: dict) -> str:
+    if not ip or not mmdb_path or not os.path.isfile(mmdb_path):
+        return ""
+    if ip in mmdb_cache:
+        return mmdb_cache[ip]
+
+    reader = reader_holder.get("reader")
+    if reader is None:
+        try:
+            import geoip2.database
+            reader = geoip2.database.Reader(mmdb_path)
+            reader_holder["reader"] = reader
+        except Exception:
+            mmdb_cache[ip] = ""
+            return ""
+    try:
+        rec = reader.country(ip)
+        cc = (rec.country.iso_code or "").strip().upper()
+        mmdb_cache[ip] = cc
+        return cc
+    except Exception:
+        mmdb_cache[ip] = ""
+        return ""
+
+
 def process_file(
     input_path: str,
     output_path: str | None,
@@ -147,7 +212,10 @@ def process_file(
         hosts.append(get_host_from_link(link) if add_comment and not STRIP_FAST else None)
 
     geo_cache: dict[str, str] = {}
+    mmdb_cache: dict[str, str] = {}
+    reader_holder: dict[str, object] = {}
     host_to_ip: dict[str, str] = {}
+    cidr_networks = _load_cidr_networks(STRIP_CIDR_FILE) if add_comment else []
 
     if add_comment and not STRIP_FAST:
         # 1) Разрешаем все уникальные хосты в IP параллельно
@@ -177,12 +245,24 @@ def process_file(
         if add_comment:
             if STRIP_FAST:
                 cc = STRIP_CC_DEFAULT or ""
+                is_lte = False
             else:
                 ip = host_to_ip.get(host, "") if host else ""
-                cc = geo_cache.get(ip, "")
+                # Максимально точное определение страны: сначала локальный MMDB, затем ip-api.
+                cc = _cc_from_mmdb(ip, STRIP_GEO_MMDB, mmdb_cache, reader_holder) or geo_cache.get(ip, "")
+                if not cc and ip:
+                    cc = fetch_country_for_ip(ip, geo_cache)
+                is_lte = _ip_in_cidr(ip, cidr_networks)
             flag = country_code_to_flag(cc)
-            link = f"{link}#{flag} {get_auto_comment().strip()}"
+            lte_mark = " | LTE" if (STRIP_ADD_LTE_MARK and is_lte) else ""
+            link = f"{link}#{flag}{lte_mark} {get_auto_comment().strip()}"
         result.append(link)
+    reader = reader_holder.get("reader")
+    if reader is not None:
+        try:
+            reader.close()
+        except Exception:
+            pass
     out.write_text("\n".join(result) + ("\n" if result else ""), encoding="utf-8")
     print(f"Processed: {len(lines_in)} lines -> {len(result)} with new comment. Output: {out}")
     return len(result)

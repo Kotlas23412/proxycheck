@@ -1,3 +1,4 @@
 # Ссылки на подписки VLESS/VMess/Trojan (MODE=merge, по одной URL на строку)
 # Добавьте свои рабочие источники:
+
 https://raw.githubusercontent.com/zieng2/wl/main/vless_universal.txt

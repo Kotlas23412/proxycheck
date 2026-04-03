@@ -286,6 +286,9 @@ chmod +x run_check.sh
 | `OUTPUT_ADD_DATE` | Добавлять дату и источник к имени файла (`true`/`false`) |
 | `NOTWORKERS_UPDATE_ENABLED` | Обновлять файл нерабочих ключей `notworkers` в `OUTPUT_DIR` после проверки (`false` - только чтение для фильтра) |
 | `AUTO_COMMENT` | Комментарий, который добавляется к проверенным конфигам (после флага страны) |
+| `STRIP_VPN_COMMENTS_LTE_MARK` | Добавлять `\| LTE` в комментарий, если endpoint IP попал в `cidrlist` (`true`/`false`) |
+| `STRIP_VPN_COMMENTS_CIDR_FILE` | Путь к файлу CIDR для `\| LTE` (по умолчанию `cidrlist`) |
+| `STRIP_VPN_COMMENTS_GEO_MMDB` / `GEOIP_MMDB` | Путь к MMDB для более точного определения страны (fallback - ip-api) |
 | `CIDR_WHITELIST_URL` | URL списка CIDR для Docker, если файл whitelist не задан или пуст |
 | `CIDR_WHITELIST_FILE` | Путь к локальному файлу CIDR (в контейнере с монтированием репозитория обычно `/app/cidrlist`); имеет приоритет над URL |
 | `SNI_FILE_URL` | URL списка доменов для whitelist SNI (workflow «Update tools»; см. комментарий в `.env.example`) |
