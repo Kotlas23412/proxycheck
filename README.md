@@ -154,6 +154,13 @@ python -m lib.vless_checker "https://example.com/my-vless-list.txt"
 python -m lib.vless_checker
 ```
 
+Проверка доступа к сайтам (в т.ч. заблокированным в РФ): в коде уже есть встроенные HTTPS URL (`twitter.com`, `x.com`, `instagram.com`, `facebook.com`, `threads.net`), которые используются по умолчанию, если `TEST_URLS_HTTPS` не задан.
+
+```bash
+MODE=single
+python -m lib.vless_checker "https://example.com/my-vless-list.txt"
+```
+
 ## Запуск через Docker
 
 Для запуска проверки в изолированном окружении доступен режим через Docker.  
@@ -455,4 +462,3 @@ chmod +x run_check.sh
 | `EXPORT_DIR` | Директория для экспорта |
 
 </details>
-
