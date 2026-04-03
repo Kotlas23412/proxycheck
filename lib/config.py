@@ -78,6 +78,17 @@ def _parse_url_list(url_str: str) -> list[str]:
 
 TEST_URLS = _parse_url_list(TEST_URLS_STR) if TEST_URLS_STR else []
 TEST_URLS_HTTPS = _parse_url_list(TEST_URLS_HTTPS_STR) if TEST_URLS_HTTPS_STR else []
+# Встроенный HTTPS-набор для проверки доступа к часто блокируемым в РФ сайтам.
+# Используется только если TEST_URLS_HTTPS не задан явно через env.
+DEFAULT_BLOCKED_TEST_URLS_HTTPS = [
+    "https://twitter.com",
+    "https://x.com",
+    "https://www.instagram.com",
+    "https://www.facebook.com",
+    "https://www.threads.net",
+]
+if not TEST_URLS_HTTPS:
+    TEST_URLS_HTTPS = DEFAULT_BLOCKED_TEST_URLS_HTTPS.copy()
 
 # Если TEST_URLS не задан, используем TEST_URL как единственный URL
 if not TEST_URLS:
@@ -124,6 +135,10 @@ ALLOWED_COUNTRIES = [c.strip().upper() for c in ALLOWED_COUNTRIES_STR.split(",")
 # Проверка стабильности
 STABILITY_CHECKS = _env_int("STABILITY_CHECKS", 1)
 STABILITY_CHECK_DELAY = _env_float("STABILITY_CHECK_DELAY", 2.0)
+# Финальная отложенная перепроверка: помогает отсеять прокси, которые «умирают» через 2-10 минут
+# (например, под DPI/TPU ограничениями). 0 = выключено.
+POST_CHECK_DELAY_SEC = _env_int("POST_CHECK_DELAY_SEC", 0)
+POST_CHECK_WORKERS = _env_int("POST_CHECK_WORKERS", 50)
 
 # Строгий режим
 STRICT_MODE = _env_bool("STRICT_MODE", False)

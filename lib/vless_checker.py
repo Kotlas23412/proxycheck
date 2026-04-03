@@ -66,6 +66,9 @@ from lib.config import (
     NOTWORKERS_FILE,
     NOTWORKERS_UPDATE_ENABLED,
     EXCLUDE_TRANSIENT_FROM_NOTWORKERS,
+    OUTPUT_ADD_DATE,
+    POST_CHECK_DELAY_SEC,
+    POST_CHECK_WORKERS,
 )
 from lib.config_display import print_current_config
 from lib.export import export_to_csv, export_to_html, export_to_json
@@ -497,6 +500,44 @@ def main():
                         maybe_print_pct_milestones(done)
 
     elapsed = time.perf_counter() - time_start
+
+    # Финальная отложенная перепроверка (anti-DPI/TPU): ждём N секунд и повторно
+    # проверяем только уже прошедшие ключи. Помогает убрать «умирающие через 5 минут».
+    if POST_CHECK_DELAY_SEC > 0 and available_keys:
+        delay_sec = max(0, int(POST_CHECK_DELAY_SEC))
+        workers = max(1, int(POST_CHECK_WORKERS))
+        console.print(
+            f"[yellow]Финальная перепроверка:[/yellow] ожидание {delay_sec}с, "
+            f"повторная проверка {len(available_keys)} ключей..."
+        )
+        time.sleep(delay_sec)
+
+        survivors: set[str] = set()
+        dropped = 0
+        with ThreadPoolExecutor(max_workers=min(workers, len(available_keys))) as executor:
+            fut_map = {executor.submit(check_key_e2e, link, False, cache): link for link in available_keys}
+            for fut, link in fut_map.items():
+                try:
+                    _link, ok, metrics = fut.result()
+                    all_metrics[_link] = metrics
+                    if ok:
+                        survivors.add(_link)
+                    else:
+                        dropped += 1
+                except Exception:
+                    dropped += 1
+
+        if dropped > 0:
+            available = [
+                item for item in available
+                if _extract_first_proxy_line_from_formatted(item[0]).split(maxsplit=1)[0].strip() in survivors
+            ]
+            available_keys = [k for k in available_keys if k in survivors]
+            console.print(
+                f"[yellow]Финальная перепроверка:[/yellow] отсеяно {dropped} нестабильных, "
+                f"осталось {len(available_keys)}"
+            )
+
     save_results_and_exit(available, all_metrics, output_path, elapsed, total, cache, link_to_full, set(available_keys))
 
 
@@ -576,6 +617,34 @@ def _create_top100_file(output_path: str, available_sorted: list[tuple[str, floa
     return str(top100_path)
 
 
+def _cleanup_old_dated_outputs(output_path: str) -> None:
+    """
+    Удаляет старые файлы вида "<name> (source_DDMMYYYY).txt" и top100-варианты,
+    чтобы при режиме обновления (OUTPUT_ADD_DATE=false) в configs не копились архивные копии.
+    """
+    if OUTPUT_ADD_DATE:
+        return
+    base_path = Path(output_path)
+    out_dir = base_path.parent
+    if not out_dir.exists():
+        return
+
+    if base_path.suffix:
+        main_pattern = f"{base_path.stem} (*_*){base_path.suffix}"
+        top_pattern = f"{base_path.stem}(top100) (*_*){base_path.suffix}"
+    else:
+        # При OUTPUT_ADD_DATE=true код добавляет .txt, даже если базовый OUTPUT_FILE без расширения.
+        main_pattern = f"{base_path.name} (*_*).txt"
+        top_pattern = f"{base_path.name}(top100) (*_*).txt"
+
+    for pattern in (main_pattern, top_pattern):
+        for old_file in out_dir.glob(pattern):
+            try:
+                old_file.unlink()
+            except OSError:
+                pass
+
+
 def save_results_and_exit(available: list[tuple[str, float]], all_metrics: dict, output_path: str, elapsed: float, total: int, cache: Optional[dict] = None, link_to_full: Optional[dict[str, str]] = None, passed_links: Optional[set[str]] = None):
     """
     Сохраняет результаты и выводит статистику.
@@ -606,6 +675,7 @@ def save_results_and_exit(available: list[tuple[str, float]], all_metrics: dict,
     # Сохранение результатов в текстовый файл (отсортированные, без дубликатов, без префикса задержки)
     if available_dedup:
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        _cleanup_old_dated_outputs(output_path)
         available_lines = [_extract_first_proxy_line_from_formatted(item[0]) for item in available_dedup]
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(available_lines))
