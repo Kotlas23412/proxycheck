@@ -66,6 +66,7 @@ from lib.config import (
     NOTWORKERS_FILE,
     NOTWORKERS_UPDATE_ENABLED,
     EXCLUDE_TRANSIENT_FROM_NOTWORKERS,
+    OUTPUT_ADD_DATE,
 )
 from lib.config_display import print_current_config
 from lib.export import export_to_csv, export_to_html, export_to_json
@@ -576,6 +577,34 @@ def _create_top100_file(output_path: str, available_sorted: list[tuple[str, floa
     return str(top100_path)
 
 
+def _cleanup_old_dated_outputs(output_path: str) -> None:
+    """
+    Удаляет старые файлы вида "<name> (source_DDMMYYYY).txt" и top100-варианты,
+    чтобы при режиме обновления (OUTPUT_ADD_DATE=false) в configs не копились архивные копии.
+    """
+    if OUTPUT_ADD_DATE:
+        return
+    base_path = Path(output_path)
+    out_dir = base_path.parent
+    if not out_dir.exists():
+        return
+
+    if base_path.suffix:
+        main_pattern = f"{base_path.stem} (*_*){base_path.suffix}"
+        top_pattern = f"{base_path.stem}(top100) (*_*){base_path.suffix}"
+    else:
+        # При OUTPUT_ADD_DATE=true код добавляет .txt, даже если базовый OUTPUT_FILE без расширения.
+        main_pattern = f"{base_path.name} (*_*).txt"
+        top_pattern = f"{base_path.name}(top100) (*_*).txt"
+
+    for pattern in (main_pattern, top_pattern):
+        for old_file in out_dir.glob(pattern):
+            try:
+                old_file.unlink()
+            except OSError:
+                pass
+
+
 def save_results_and_exit(available: list[tuple[str, float]], all_metrics: dict, output_path: str, elapsed: float, total: int, cache: Optional[dict] = None, link_to_full: Optional[dict[str, str]] = None, passed_links: Optional[set[str]] = None):
     """
     Сохраняет результаты и выводит статистику.
@@ -606,6 +635,7 @@ def save_results_and_exit(available: list[tuple[str, float]], all_metrics: dict,
     # Сохранение результатов в текстовый файл (отсортированные, без дубликатов, без префикса задержки)
     if available_dedup:
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        _cleanup_old_dated_outputs(output_path)
         available_lines = [_extract_first_proxy_line_from_formatted(item[0]) for item in available_dedup]
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(available_lines))

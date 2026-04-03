@@ -78,6 +78,17 @@ def _parse_url_list(url_str: str) -> list[str]:
 
 TEST_URLS = _parse_url_list(TEST_URLS_STR) if TEST_URLS_STR else []
 TEST_URLS_HTTPS = _parse_url_list(TEST_URLS_HTTPS_STR) if TEST_URLS_HTTPS_STR else []
+# Встроенный HTTPS-набор для проверки доступа к часто блокируемым в РФ сайтам.
+# Используется только если TEST_URLS_HTTPS не задан явно через env.
+DEFAULT_BLOCKED_TEST_URLS_HTTPS = [
+    "https://twitter.com",
+    "https://x.com",
+    "https://www.instagram.com",
+    "https://www.facebook.com",
+    "https://www.threads.net",
+]
+if not TEST_URLS_HTTPS:
+    TEST_URLS_HTTPS = DEFAULT_BLOCKED_TEST_URLS_HTTPS.copy()
 
 # Если TEST_URLS не задан, используем TEST_URL как единственный URL
 if not TEST_URLS:
