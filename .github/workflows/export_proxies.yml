@@ -37,8 +37,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add proxy/top10_proxies.txt
-          git add proxy/top10_happ.json
+          # Здесь добавлен флаг -f, чтобы игнорировать правила .gitignore
+          git add -f proxy/top10_proxies.txt
+          git add -f proxy/top10_happ.json
           
           if ! git diff --cached --quiet; then
             git commit -m "Update Top 10 proxies (TXT + Happ JSON) [automated]"
