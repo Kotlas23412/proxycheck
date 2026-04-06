@@ -207,7 +207,7 @@ jobs:
 
       - name: Connect to Tailscale (auto, non-blocking)
         id: ts_connect
-        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.phone_proxy_url != '') || (github.event_name != 'workflow_dispatch' && vars.PHONE_PROXY_URL != '') }}
+        if: ${{ inputs.phone_proxy_url != '' || vars.PHONE_PROXY_URL != '' }}
         continue-on-error: true
         uses: tailscale/github-action@v2
         with:
@@ -217,7 +217,7 @@ jobs:
         id: route_select
         run: |
           set -euo pipefail
-          PROXY_URL="${{ github.event_name == 'workflow_dispatch' && inputs.phone_proxy_url || vars.PHONE_PROXY_URL }}"
+          PROXY_URL="${{ inputs.phone_proxy_url || vars.PHONE_PROXY_URL }}"
           TS_OUTCOME="${{ steps.ts_connect.outcome || 'skipped' }}"
 
           echo "=== Network bootstrap ==="
