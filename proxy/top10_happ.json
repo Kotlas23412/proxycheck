@@ -1,0 +1,1389 @@
+[
+  {
+    "log": {
+      "loglevel": "warning"
+    },
+    "remarks": "🇷🇺 Россия | LTE #1",
+    "inbounds": [
+      {
+        "port": 10808,
+        "protocol": "socks",
+        "settings": {
+          "udp": true
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      },
+      {
+        "port": 10809,
+        "protocol": "http",
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      }
+    ],
+    "outbounds": [
+      {
+        "tag": "proxy",
+        "protocol": "vless",
+        "settings": {
+          "vnext": [
+            {
+              "address": "46.149.68.27",
+              "port": 2083,
+              "users": [
+                {
+                  "id": "418ad4b9-d8be-447c-953d-e666fb154685",
+                  "encryption": "none"
+                }
+              ]
+            }
+          ]
+        },
+        "streamSettings": {
+          "network": "grpc",
+          "grpcSettings": {
+            "serviceName": "UpdateService"
+          },
+          "security": "reality",
+          "realitySettings": {
+            "serverName": "ir.ozone.ru",
+            "fingerprint": "chrome",
+            "publicKey": "J6NuOlIq3ypdTFc1TMhDDKmF8BWPnNWZq1EkxD7K-lQ",
+            "shortId": "6da16b1335651b38"
+          }
+        }
+      },
+      {
+        "tag": "direct",
+        "protocol": "freedom"
+      },
+      {
+        "tag": "block",
+        "protocol": "blackhole"
+      }
+    ],
+    "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": [
+        {
+          "type": "field",
+          "protocol": [
+            "bittorrent"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "domain:ru",
+            "domain:su",
+            "domain:xn--p1ai",
+            "domain:vk.com",
+            "domain:vk.ru",
+            "domain:userapi.com",
+            "domain:vk-cdn.net",
+            "domain:vkuser.net",
+            "domain:mvk.com",
+            "domain:yandex.ru",
+            "domain:yandex.net",
+            "domain:ya.ru",
+            "domain:kinopoisk.ru",
+            "domain:mail.ru",
+            "domain:ok.ru",
+            "domain:avito.ru",
+            "domain:avito.st",
+            "keyword:yandex",
+            "keyword:vkontakte",
+            "keyword:userapi",
+            "keyword:mail",
+            "keyword:rutube",
+            "keyword:sber",
+            "keyword:tinkoff",
+            "keyword:alfabank",
+            "keyword:vtb",
+            "keyword:gosuslugi"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "192.168.0.0/16",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "127.0.0.0/8",
+            "fc00::/7",
+            "fe80::/10"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "87.240.128.0/18",
+            "93.186.224.0/20",
+            "95.213.0.0/18"
+          ],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  },
+  {
+    "log": {
+      "loglevel": "warning"
+    },
+    "remarks": "🇷🇺 Россия | LTE #2",
+    "inbounds": [
+      {
+        "port": 10808,
+        "protocol": "socks",
+        "settings": {
+          "udp": true
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      },
+      {
+        "port": 10809,
+        "protocol": "http",
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      }
+    ],
+    "outbounds": [
+      {
+        "tag": "proxy",
+        "protocol": "vless",
+        "settings": {
+          "vnext": [
+            {
+              "address": "85.92.111.163",
+              "port": 2083,
+              "users": [
+                {
+                  "id": "418ad4b9-d8be-447c-953d-e666fb154685",
+                  "encryption": "none"
+                }
+              ]
+            }
+          ]
+        },
+        "streamSettings": {
+          "network": "grpc",
+          "grpcSettings": {
+            "serviceName": "UpdateService"
+          },
+          "security": "reality",
+          "realitySettings": {
+            "serverName": "ir.ozone.ru",
+            "fingerprint": "chrome",
+            "publicKey": "J6NuOlIq3ypdTFc1TMhDDKmF8BWPnNWZq1EkxD7K-lQ",
+            "shortId": "6da16b1335651b38"
+          }
+        }
+      },
+      {
+        "tag": "direct",
+        "protocol": "freedom"
+      },
+      {
+        "tag": "block",
+        "protocol": "blackhole"
+      }
+    ],
+    "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": [
+        {
+          "type": "field",
+          "protocol": [
+            "bittorrent"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "domain:ru",
+            "domain:su",
+            "domain:xn--p1ai",
+            "domain:vk.com",
+            "domain:vk.ru",
+            "domain:userapi.com",
+            "domain:vk-cdn.net",
+            "domain:vkuser.net",
+            "domain:mvk.com",
+            "domain:yandex.ru",
+            "domain:yandex.net",
+            "domain:ya.ru",
+            "domain:kinopoisk.ru",
+            "domain:mail.ru",
+            "domain:ok.ru",
+            "domain:avito.ru",
+            "domain:avito.st",
+            "keyword:yandex",
+            "keyword:vkontakte",
+            "keyword:userapi",
+            "keyword:mail",
+            "keyword:rutube",
+            "keyword:sber",
+            "keyword:tinkoff",
+            "keyword:alfabank",
+            "keyword:vtb",
+            "keyword:gosuslugi"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "192.168.0.0/16",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "127.0.0.0/8",
+            "fc00::/7",
+            "fe80::/10"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "87.240.128.0/18",
+            "93.186.224.0/20",
+            "95.213.0.0/18"
+          ],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  },
+  {
+    "log": {
+      "loglevel": "warning"
+    },
+    "remarks": "🇷🇺 Россия | LTE #3",
+    "inbounds": [
+      {
+        "port": 10808,
+        "protocol": "socks",
+        "settings": {
+          "udp": true
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      },
+      {
+        "port": 10809,
+        "protocol": "http",
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      }
+    ],
+    "outbounds": [
+      {
+        "tag": "proxy",
+        "protocol": "vless",
+        "settings": {
+          "vnext": [
+            {
+              "address": "46.149.71.197",
+              "port": 2083,
+              "users": [
+                {
+                  "id": "e11ca047-3e50-469b-aa1a-beb9be0256b2",
+                  "encryption": "none"
+                }
+              ]
+            }
+          ]
+        },
+        "streamSettings": {
+          "network": "grpc",
+          "grpcSettings": {
+            "serviceName": "UpdateService"
+          },
+          "security": "reality",
+          "realitySettings": {
+            "serverName": "ir.ozone.ru",
+            "fingerprint": "chrome",
+            "publicKey": "J6NuOlIq3ypdTFc1TMhDDKmF8BWPnNWZq1EkxD7K-lQ",
+            "shortId": "6da16b1335651b38"
+          }
+        }
+      },
+      {
+        "tag": "direct",
+        "protocol": "freedom"
+      },
+      {
+        "tag": "block",
+        "protocol": "blackhole"
+      }
+    ],
+    "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": [
+        {
+          "type": "field",
+          "protocol": [
+            "bittorrent"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "domain:ru",
+            "domain:su",
+            "domain:xn--p1ai",
+            "domain:vk.com",
+            "domain:vk.ru",
+            "domain:userapi.com",
+            "domain:vk-cdn.net",
+            "domain:vkuser.net",
+            "domain:mvk.com",
+            "domain:yandex.ru",
+            "domain:yandex.net",
+            "domain:ya.ru",
+            "domain:kinopoisk.ru",
+            "domain:mail.ru",
+            "domain:ok.ru",
+            "domain:avito.ru",
+            "domain:avito.st",
+            "keyword:yandex",
+            "keyword:vkontakte",
+            "keyword:userapi",
+            "keyword:mail",
+            "keyword:rutube",
+            "keyword:sber",
+            "keyword:tinkoff",
+            "keyword:alfabank",
+            "keyword:vtb",
+            "keyword:gosuslugi"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "192.168.0.0/16",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "127.0.0.0/8",
+            "fc00::/7",
+            "fe80::/10"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "87.240.128.0/18",
+            "93.186.224.0/20",
+            "95.213.0.0/18"
+          ],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  },
+  {
+    "log": {
+      "loglevel": "warning"
+    },
+    "remarks": "🇷🇺 Россия | LTE #4",
+    "inbounds": [
+      {
+        "port": 10808,
+        "protocol": "socks",
+        "settings": {
+          "udp": true
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      },
+      {
+        "port": 10809,
+        "protocol": "http",
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      }
+    ],
+    "outbounds": [
+      {
+        "tag": "proxy",
+        "protocol": "vless",
+        "settings": {
+          "vnext": [
+            {
+              "address": "51.250.45.246",
+              "port": 443,
+              "users": [
+                {
+                  "id": "771297ed-c526-4fe3-bea4-919e89665bc9",
+                  "encryption": "none",
+                  "flow": "xtls-rprx-vision"
+                }
+              ]
+            }
+          ]
+        },
+        "streamSettings": {
+          "network": "tcp",
+          "security": "reality",
+          "realitySettings": {
+            "serverName": "ads.x5.ru",
+            "fingerprint": "chrome",
+            "publicKey": "e6QVzqAw4kvQHxdu2pFsLnadziIWm9DjOo2rul_NgAk",
+            "shortId": "8ac77e6b777376f8"
+          }
+        }
+      },
+      {
+        "tag": "direct",
+        "protocol": "freedom"
+      },
+      {
+        "tag": "block",
+        "protocol": "blackhole"
+      }
+    ],
+    "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": [
+        {
+          "type": "field",
+          "protocol": [
+            "bittorrent"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "domain:ru",
+            "domain:su",
+            "domain:xn--p1ai",
+            "domain:vk.com",
+            "domain:vk.ru",
+            "domain:userapi.com",
+            "domain:vk-cdn.net",
+            "domain:vkuser.net",
+            "domain:mvk.com",
+            "domain:yandex.ru",
+            "domain:yandex.net",
+            "domain:ya.ru",
+            "domain:kinopoisk.ru",
+            "domain:mail.ru",
+            "domain:ok.ru",
+            "domain:avito.ru",
+            "domain:avito.st",
+            "keyword:yandex",
+            "keyword:vkontakte",
+            "keyword:userapi",
+            "keyword:mail",
+            "keyword:rutube",
+            "keyword:sber",
+            "keyword:tinkoff",
+            "keyword:alfabank",
+            "keyword:vtb",
+            "keyword:gosuslugi"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "192.168.0.0/16",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "127.0.0.0/8",
+            "fc00::/7",
+            "fe80::/10"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "87.240.128.0/18",
+            "93.186.224.0/20",
+            "95.213.0.0/18"
+          ],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  },
+  {
+    "log": {
+      "loglevel": "warning"
+    },
+    "remarks": "🇷🇺 Россия | LTE #5",
+    "inbounds": [
+      {
+        "port": 10808,
+        "protocol": "socks",
+        "settings": {
+          "udp": true
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      },
+      {
+        "port": 10809,
+        "protocol": "http",
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      }
+    ],
+    "outbounds": [
+      {
+        "tag": "proxy",
+        "protocol": "vless",
+        "settings": {
+          "vnext": [
+            {
+              "address": "158.160.241.172",
+              "port": 443,
+              "users": [
+                {
+                  "id": "82b5b465-3307-4a25-acef-abd1649bbedf",
+                  "encryption": "none",
+                  "flow": "xtls-rprx-vision"
+                }
+              ]
+            }
+          ]
+        },
+        "streamSettings": {
+          "network": "tcp",
+          "security": "reality",
+          "realitySettings": {
+            "serverName": "max.ru",
+            "fingerprint": "chrome",
+            "publicKey": "gwuAehnMX6e-n1fxIenfjx43j3qXXi7Cb4wfnW5VyBQ",
+            "shortId": "f04729f65b9ea261"
+          }
+        }
+      },
+      {
+        "tag": "direct",
+        "protocol": "freedom"
+      },
+      {
+        "tag": "block",
+        "protocol": "blackhole"
+      }
+    ],
+    "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": [
+        {
+          "type": "field",
+          "protocol": [
+            "bittorrent"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "domain:ru",
+            "domain:su",
+            "domain:xn--p1ai",
+            "domain:vk.com",
+            "domain:vk.ru",
+            "domain:userapi.com",
+            "domain:vk-cdn.net",
+            "domain:vkuser.net",
+            "domain:mvk.com",
+            "domain:yandex.ru",
+            "domain:yandex.net",
+            "domain:ya.ru",
+            "domain:kinopoisk.ru",
+            "domain:mail.ru",
+            "domain:ok.ru",
+            "domain:avito.ru",
+            "domain:avito.st",
+            "keyword:yandex",
+            "keyword:vkontakte",
+            "keyword:userapi",
+            "keyword:mail",
+            "keyword:rutube",
+            "keyword:sber",
+            "keyword:tinkoff",
+            "keyword:alfabank",
+            "keyword:vtb",
+            "keyword:gosuslugi"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "192.168.0.0/16",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "127.0.0.0/8",
+            "fc00::/7",
+            "fe80::/10"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "87.240.128.0/18",
+            "93.186.224.0/20",
+            "95.213.0.0/18"
+          ],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  },
+  {
+    "log": {
+      "loglevel": "warning"
+    },
+    "remarks": "🇷🇺 Россия | LTE #6",
+    "inbounds": [
+      {
+        "port": 10808,
+        "protocol": "socks",
+        "settings": {
+          "udp": true
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      },
+      {
+        "port": 10809,
+        "protocol": "http",
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      }
+    ],
+    "outbounds": [
+      {
+        "tag": "proxy",
+        "protocol": "vless",
+        "settings": {
+          "vnext": [
+            {
+              "address": "158.160.255.86",
+              "port": 2443,
+              "users": [
+                {
+                  "id": "b5ea6073-f9c3-41d4-a244-4cda340f69bd",
+                  "encryption": "none",
+                  "flow": "xtls-rprx-vision"
+                }
+              ]
+            }
+          ]
+        },
+        "streamSettings": {
+          "network": "tcp",
+          "security": "reality",
+          "realitySettings": {
+            "serverName": "ads.x5.ru",
+            "fingerprint": "chrome",
+            "publicKey": "USffNprEM08MHiuVy5bj6-kvxugxycuZcgQDFJyz2Wc",
+            "shortId": "8f9d033ad6d2cebf"
+          }
+        }
+      },
+      {
+        "tag": "direct",
+        "protocol": "freedom"
+      },
+      {
+        "tag": "block",
+        "protocol": "blackhole"
+      }
+    ],
+    "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": [
+        {
+          "type": "field",
+          "protocol": [
+            "bittorrent"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "domain:ru",
+            "domain:su",
+            "domain:xn--p1ai",
+            "domain:vk.com",
+            "domain:vk.ru",
+            "domain:userapi.com",
+            "domain:vk-cdn.net",
+            "domain:vkuser.net",
+            "domain:mvk.com",
+            "domain:yandex.ru",
+            "domain:yandex.net",
+            "domain:ya.ru",
+            "domain:kinopoisk.ru",
+            "domain:mail.ru",
+            "domain:ok.ru",
+            "domain:avito.ru",
+            "domain:avito.st",
+            "keyword:yandex",
+            "keyword:vkontakte",
+            "keyword:userapi",
+            "keyword:mail",
+            "keyword:rutube",
+            "keyword:sber",
+            "keyword:tinkoff",
+            "keyword:alfabank",
+            "keyword:vtb",
+            "keyword:gosuslugi"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "192.168.0.0/16",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "127.0.0.0/8",
+            "fc00::/7",
+            "fe80::/10"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "87.240.128.0/18",
+            "93.186.224.0/20",
+            "95.213.0.0/18"
+          ],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  },
+  {
+    "log": {
+      "loglevel": "warning"
+    },
+    "remarks": "🇷🇺 Россия | LTE #7",
+    "inbounds": [
+      {
+        "port": 10808,
+        "protocol": "socks",
+        "settings": {
+          "udp": true
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      },
+      {
+        "port": 10809,
+        "protocol": "http",
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      }
+    ],
+    "outbounds": [
+      {
+        "tag": "proxy",
+        "protocol": "vless",
+        "settings": {
+          "vnext": [
+            {
+              "address": "79.174.95.163",
+              "port": 2083,
+              "users": [
+                {
+                  "id": "40600c8a-730a-411c-b72b-c3bca115dcf7",
+                  "encryption": "none"
+                }
+              ]
+            }
+          ]
+        },
+        "streamSettings": {
+          "network": "grpc",
+          "grpcSettings": {
+            "serviceName": "UpdateService"
+          },
+          "security": "reality",
+          "realitySettings": {
+            "serverName": "ads.x5.ru",
+            "fingerprint": "qq",
+            "publicKey": "J6NuOlIq3ypdTFc1TMhDDKmF8BWPnNWZq1EkxD7K-lQ",
+            "shortId": "6da16b1335651b38"
+          }
+        }
+      },
+      {
+        "tag": "direct",
+        "protocol": "freedom"
+      },
+      {
+        "tag": "block",
+        "protocol": "blackhole"
+      }
+    ],
+    "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": [
+        {
+          "type": "field",
+          "protocol": [
+            "bittorrent"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "domain:ru",
+            "domain:su",
+            "domain:xn--p1ai",
+            "domain:vk.com",
+            "domain:vk.ru",
+            "domain:userapi.com",
+            "domain:vk-cdn.net",
+            "domain:vkuser.net",
+            "domain:mvk.com",
+            "domain:yandex.ru",
+            "domain:yandex.net",
+            "domain:ya.ru",
+            "domain:kinopoisk.ru",
+            "domain:mail.ru",
+            "domain:ok.ru",
+            "domain:avito.ru",
+            "domain:avito.st",
+            "keyword:yandex",
+            "keyword:vkontakte",
+            "keyword:userapi",
+            "keyword:mail",
+            "keyword:rutube",
+            "keyword:sber",
+            "keyword:tinkoff",
+            "keyword:alfabank",
+            "keyword:vtb",
+            "keyword:gosuslugi"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "192.168.0.0/16",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "127.0.0.0/8",
+            "fc00::/7",
+            "fe80::/10"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "87.240.128.0/18",
+            "93.186.224.0/20",
+            "95.213.0.0/18"
+          ],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  },
+  {
+    "log": {
+      "loglevel": "warning"
+    },
+    "remarks": "🇷🇺 Россия | LTE #8",
+    "inbounds": [
+      {
+        "port": 10808,
+        "protocol": "socks",
+        "settings": {
+          "udp": true
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      },
+      {
+        "port": 10809,
+        "protocol": "http",
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      }
+    ],
+    "outbounds": [
+      {
+        "tag": "proxy",
+        "protocol": "vless",
+        "settings": {
+          "vnext": [
+            {
+              "address": "84.201.169.59",
+              "port": 443,
+              "users": [
+                {
+                  "id": "a96f18f0-4a56-4c4f-be6e-434835f5523c",
+                  "encryption": "none",
+                  "flow": "xtls-rprx-vision"
+                }
+              ]
+            }
+          ]
+        },
+        "streamSettings": {
+          "network": "tcp",
+          "security": "reality",
+          "realitySettings": {
+            "serverName": "ads.x5.ru",
+            "fingerprint": "chrome",
+            "publicKey": "e6QVzqAw4kvQHxdu2pFsLnadziIWm9DjOo2rul_NgAk",
+            "shortId": "8ac77e6b777376f8"
+          }
+        }
+      },
+      {
+        "tag": "direct",
+        "protocol": "freedom"
+      },
+      {
+        "tag": "block",
+        "protocol": "blackhole"
+      }
+    ],
+    "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": [
+        {
+          "type": "field",
+          "protocol": [
+            "bittorrent"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "domain:ru",
+            "domain:su",
+            "domain:xn--p1ai",
+            "domain:vk.com",
+            "domain:vk.ru",
+            "domain:userapi.com",
+            "domain:vk-cdn.net",
+            "domain:vkuser.net",
+            "domain:mvk.com",
+            "domain:yandex.ru",
+            "domain:yandex.net",
+            "domain:ya.ru",
+            "domain:kinopoisk.ru",
+            "domain:mail.ru",
+            "domain:ok.ru",
+            "domain:avito.ru",
+            "domain:avito.st",
+            "keyword:yandex",
+            "keyword:vkontakte",
+            "keyword:userapi",
+            "keyword:mail",
+            "keyword:rutube",
+            "keyword:sber",
+            "keyword:tinkoff",
+            "keyword:alfabank",
+            "keyword:vtb",
+            "keyword:gosuslugi"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "192.168.0.0/16",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "127.0.0.0/8",
+            "fc00::/7",
+            "fe80::/10"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "87.240.128.0/18",
+            "93.186.224.0/20",
+            "95.213.0.0/18"
+          ],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  },
+  {
+    "log": {
+      "loglevel": "warning"
+    },
+    "remarks": "🇷🇺 Россия | LTE #9",
+    "inbounds": [
+      {
+        "port": 10808,
+        "protocol": "socks",
+        "settings": {
+          "udp": true
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      },
+      {
+        "port": 10809,
+        "protocol": "http",
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      }
+    ],
+    "outbounds": [
+      {
+        "tag": "proxy",
+        "protocol": "vless",
+        "settings": {
+          "vnext": [
+            {
+              "address": "51.250.126.235",
+              "port": 443,
+              "users": [
+                {
+                  "id": "ae8173f2-9b3b-4fff-9a53-ad857dc97b94",
+                  "encryption": "none",
+                  "flow": "xtls-rprx-vision"
+                }
+              ]
+            }
+          ]
+        },
+        "streamSettings": {
+          "network": "tcp",
+          "security": "reality",
+          "realitySettings": {
+            "serverName": "tunnel.vk-apps.com",
+            "fingerprint": "chrome",
+            "publicKey": "tEduQabQ5YS0EPkXDIRMAuns068ZfzBlCrry4JS2MVs",
+            "shortId": "68d6237c"
+          }
+        }
+      },
+      {
+        "tag": "direct",
+        "protocol": "freedom"
+      },
+      {
+        "tag": "block",
+        "protocol": "blackhole"
+      }
+    ],
+    "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": [
+        {
+          "type": "field",
+          "protocol": [
+            "bittorrent"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "domain:ru",
+            "domain:su",
+            "domain:xn--p1ai",
+            "domain:vk.com",
+            "domain:vk.ru",
+            "domain:userapi.com",
+            "domain:vk-cdn.net",
+            "domain:vkuser.net",
+            "domain:mvk.com",
+            "domain:yandex.ru",
+            "domain:yandex.net",
+            "domain:ya.ru",
+            "domain:kinopoisk.ru",
+            "domain:mail.ru",
+            "domain:ok.ru",
+            "domain:avito.ru",
+            "domain:avito.st",
+            "keyword:yandex",
+            "keyword:vkontakte",
+            "keyword:userapi",
+            "keyword:mail",
+            "keyword:rutube",
+            "keyword:sber",
+            "keyword:tinkoff",
+            "keyword:alfabank",
+            "keyword:vtb",
+            "keyword:gosuslugi"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "192.168.0.0/16",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "127.0.0.0/8",
+            "fc00::/7",
+            "fe80::/10"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "87.240.128.0/18",
+            "93.186.224.0/20",
+            "95.213.0.0/18"
+          ],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  },
+  {
+    "log": {
+      "loglevel": "warning"
+    },
+    "remarks": "🇷🇺 Россия #10",
+    "inbounds": [
+      {
+        "port": 10808,
+        "protocol": "socks",
+        "settings": {
+          "udp": true
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      },
+      {
+        "port": 10809,
+        "protocol": "http",
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls"
+          ]
+        }
+      }
+    ],
+    "outbounds": [
+      {
+        "tag": "proxy",
+        "protocol": "vless",
+        "settings": {
+          "vnext": [
+            {
+              "address": "92.51.38.90",
+              "port": 443,
+              "users": [
+                {
+                  "id": "d70836ad-df97-4aae-a5db-5bd41d1cdf37",
+                  "encryption": "none",
+                  "flow": "xtls-rprx-vision"
+                }
+              ]
+            }
+          ]
+        },
+        "streamSettings": {
+          "network": "tcp",
+          "security": "reality",
+          "realitySettings": {
+            "serverName": "5post-gate.x5.ru",
+            "fingerprint": "qq",
+            "publicKey": "SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc"
+          }
+        }
+      },
+      {
+        "tag": "direct",
+        "protocol": "freedom"
+      },
+      {
+        "tag": "block",
+        "protocol": "blackhole"
+      }
+    ],
+    "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": [
+        {
+          "type": "field",
+          "protocol": [
+            "bittorrent"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "domain:ru",
+            "domain:su",
+            "domain:xn--p1ai",
+            "domain:vk.com",
+            "domain:vk.ru",
+            "domain:userapi.com",
+            "domain:vk-cdn.net",
+            "domain:vkuser.net",
+            "domain:mvk.com",
+            "domain:yandex.ru",
+            "domain:yandex.net",
+            "domain:ya.ru",
+            "domain:kinopoisk.ru",
+            "domain:mail.ru",
+            "domain:ok.ru",
+            "domain:avito.ru",
+            "domain:avito.st",
+            "keyword:yandex",
+            "keyword:vkontakte",
+            "keyword:userapi",
+            "keyword:mail",
+            "keyword:rutube",
+            "keyword:sber",
+            "keyword:tinkoff",
+            "keyword:alfabank",
+            "keyword:vtb",
+            "keyword:gosuslugi"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "192.168.0.0/16",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "127.0.0.0/8",
+            "fc00::/7",
+            "fe80::/10"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "87.240.128.0/18",
+            "93.186.224.0/20",
+            "95.213.0.0/18"
+          ],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  }
+]
