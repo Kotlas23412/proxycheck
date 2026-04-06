@@ -205,42 +205,6 @@ jobs:
           ref: main
           fetch-depth: 1
 
-      - name: Connect to Tailscale (auto, non-blocking)
-        id: ts_connect
-        if: ${{ inputs.phone_proxy_url != '' || vars.PHONE_PROXY_URL != '' }}
-        continue-on-error: true
-        uses: tailscale/github-action@v2
-        with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-
-      - name: "Auto route: phone proxy first, GitHub direct fallback"
-        id: route_select
-        run: |
-          set -euo pipefail
-          PROXY_URL="${{ inputs.phone_proxy_url || vars.PHONE_PROXY_URL }}"
-          TS_OUTCOME="${{ steps.ts_connect.outcome || 'skipped' }}"
-
-          echo "=== Network bootstrap ==="
-          DIRECT_IP="$(curl -fsS --max-time 20 https://ifconfig.me || true)"
-          echo "NETWORK_ROUTE=github-direct" >> "$GITHUB_ENV"
-
-          if [ -z "${PROXY_URL}" ]; then
-            echo "::notice::PHONE_PROXY_URL не задан. Работаем напрямую через GitHub runner."
-            exit 0
-          fi
-
-          if PROXY_IP="$(curl -fsS --max-time 30 -x "${PROXY_URL}" https://ifconfig.me)"; then
-            {
-              echo "HTTP_PROXY=${PROXY_URL}"
-              echo "HTTPS_PROXY=${PROXY_URL}"
-              echo "ALL_PROXY=${PROXY_URL}"
-              echo "NETWORK_ROUTE=phone-proxy"
-            } >> "$GITHUB_ENV"
-            echo "::notice::Phone proxy is active. Using phone route. IP: ${PROXY_IP}"
-          else
-            echo "::warning::Phone proxy is unavailable. Falling back to direct GitHub runner route."
-          fi
-          
       - name: Setup Xray and Hysteria binaries (required for Docker build)
         run: bash tools/setup-binaries.sh
 
@@ -425,6 +389,33 @@ jobs:
               --fail-open
           fi
 
+      - name: Connect to Tailscale (auto, non-blocking)
+        id: ts_connect
+        if: ${{ inputs.phone_proxy_url != '' || vars.PHONE_PROXY_URL != '' }}
+        continue-on-error: true
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: "Auto route: phone proxy first, GitHub direct fallback"
+        id: route_select
+        run: |
+          set -euo pipefail
+          PROXY_URL="${{ inputs.phone_proxy_url || vars.PHONE_PROXY_URL }}"
+          echo "=== Network bootstrap ==="
+          if [ -z "${PROXY_URL}" ]; then
+            echo "::notice::PHONE_PROXY_URL не задан. Работаем напрямую."
+            exit 0
+          fi
+          if PROXY_IP="$(curl -fsS --max-time 30 -x "${PROXY_URL}" https://ifconfig.me)"; then
+            echo "HTTP_PROXY=${PROXY_URL}" >> "$GITHUB_ENV"
+            echo "HTTPS_PROXY=${PROXY_URL}" >> "$GITHUB_ENV"
+            echo "ALL_PROXY=${PROXY_URL}" >> "$GITHUB_ENV"
+            echo "::notice::Phone proxy is active. IP: ${PROXY_IP}"
+          else
+            echo "::warning::Phone proxy is unavailable."
+          fi
+
       # В контейнере проверяются все протоколы: VLESS, VMess, Trojan, Shadowsocks, Hysteria.
       # Список только через stdin (после merge на раннере); fallback по URL к raw configs/available не используется - иначе обошли бы CIDR и merge.
       - name: "Run checker in Docker (all protocols: Xray + Hysteria)"
@@ -595,6 +586,13 @@ jobs:
           fi
         env:
           AUTO_COMMENT: ${{ env.AUTO_COMMENT }}
+
+      - name: Disable proxy to allow Git push and caches
+        if: always()
+        run: |
+          echo "HTTP_PROXY=" >> "$GITHUB_ENV"
+          echo "HTTPS_PROXY=" >> "$GITHUB_ENV"
+          echo "ALL_PROXY=" >> "$GITHUB_ENV"
 
       # white-list_input создаётся локально на раннере (копия stdin Docker), в репозиторий не пушим.
       - name: Commit and push configs/white-list_available, configs/white-list_available(top100)
