@@ -262,6 +262,19 @@ def main():
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
+    # === НОВЫЙ БЛОК: Удаление старых файлов ===
+    txt_path = os.path.join(OUTPUT_DIR, 'top10_proxies.txt')
+    json_path = os.path.join(OUTPUT_DIR, 'top10_happ.json')
+
+    for file_path in [txt_path, json_path]:
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                print(f"Старый файл удален: {file_path}")
+            except Exception as e:
+                print(f"Не удалось удалить {file_path}: {e}")
+    # ==========================================
+
     txt_output = []
     json_output = []
 
@@ -275,15 +288,14 @@ def main():
 
     txt_output.append("# === END Top 10 Fast & Stable ===")
 
-    # Запись txt
-    with open(os.path.join(OUTPUT_DIR, 'top10_proxies.txt'), 'w', encoding='utf-8') as f:
+    # Запись новых файлов
+    with open(txt_path, 'w', encoding='utf-8') as f:
         f.write('\n'.join(txt_output) + '\n')
 
-    # Запись JSON
-    with open(os.path.join(OUTPUT_DIR, 'top10_happ.json'), 'w', encoding='utf-8') as f:
+    with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(json_output, f, indent=2, ensure_ascii=False)
 
-    print(f"Успешно сгенерировано {len(json_output)} прокси в папку {OUTPUT_DIR}/")
+    print(f"Успешно сгенерировано {len(json_output)} прокси и сохранено в {OUTPUT_DIR}/")
 
 if __name__ == "__main__":
     main()
