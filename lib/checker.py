@@ -126,6 +126,17 @@ def exact_url_test(port: int, url: str, timeout: float = 10.0) -> Tuple[bool, fl
         "http": f"socks5h://127.0.0.1:{port}",
         "https": f"socks5h://127.0.0.1:{port}",
     }
+
+    # ============ ДИАГНОСТИКА: ПРОВЕРЯЕМ IP (ТОЛЬКО ОДИН РАЗ) ============
+    import os
+    if os.environ.get("DEBUG_PROXY_IP") == "true":
+        try:
+            ip_check = requests.get("https://ifconfig.me", proxies=proxies, timeout=5)
+            detected_ip = ip_check.text.strip()
+            console.print(f"[yellow]DEBUG: Трафик через Xray выходит с IP:[/yellow] {detected_ip}")
+        except Exception as e:
+            console.print(f"[red]DEBUG: Не удалось определить выходной IP:[/red] {e}")
+    
     start_time = time.perf_counter()
     try:
         # allow_redirects=False для скорости. verify=True обязательно для защиты от подмены DPI!
