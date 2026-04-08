@@ -252,9 +252,12 @@ def build_xray_config(parsed: dict, socks_port: int) -> dict:
                     "tag": "system-proxy"
                 }
                 
-                # ============ ВАЖНО: ВСЕГДА ЛОГИРУЕМ (для проверки) ============
-                console.print(f"[bold green]✓ Xray маршрутизация через системный прокси:[/bold green] {proxy_protocol}://{proxy_host}:{proxy_port}")
-                console.print(f"[dim]  → Весь трафик VLESS/VMess/Trojan будет идти через этот адрес[/dim]")
+                # ============ ЛОГИРУЕМ ТОЛЬКО ОДИН РАЗ (не спамим) ============
+                # Используем глобальную переменную для отслеживания, выводили ли мы сообщение
+                if not hasattr(build_xray_config, '_proxy_logged'):
+                    console.print(f"[bold green]✓ Xray маршрутизация через системный прокси:[/bold green] {proxy_protocol}://{proxy_host}:{proxy_port}")
+                    console.print(f"[dim]  → Весь трафик VLESS/VMess/Trojan будет идти через этот адрес[/dim]")
+                    build_xray_config._proxy_logged = True
     
     # Добавляем основной outbound (он уже настроен идти через системный прокси, если тот есть)
     outbounds_list.append(outbound)
