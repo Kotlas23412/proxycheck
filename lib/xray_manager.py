@@ -252,9 +252,9 @@ def build_xray_config(parsed: dict, socks_port: int) -> dict:
                     "tag": "system-proxy"
                 }
                 
-                # Логируем для отладки (только при первом запуске)
-                if os.environ.get("DEBUG_FIRST_FAIL") == "true":
-                    console.print(f"[dim]Xray будет маршрутизировать трафик через системный прокси: {proxy_protocol}://{proxy_host}:{proxy_port}[/dim]")
+                # ============ ВАЖНО: ВСЕГДА ЛОГИРУЕМ (для проверки) ============
+                console.print(f"[bold green]✓ Xray маршрутизация через системный прокси:[/bold green] {proxy_protocol}://{proxy_host}:{proxy_port}")
+                console.print(f"[dim]  → Весь трафик VLESS/VMess/Trojan будет идти через этот адрес[/dim]")
     
     # Добавляем основной outbound (он уже настроен идти через системный прокси, если тот есть)
     outbounds_list.append(outbound)
