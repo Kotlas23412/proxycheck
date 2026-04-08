@@ -415,7 +415,11 @@ jobs:
           else
             echo "::warning::Phone proxy is unavailable."
           fi
-
+      - name: Export proxy vars for Docker build context
+        if: env.HTTP_PROXY != ''
+        run: |
+          echo "DOCKER_BUILDKIT_PROXY_HTTP=$HTTP_PROXY" >> $GITHUB_ENV
+          echo "DOCKER_BUILDKIT_PROXY_HTTPS=$HTTPS_PROXY" >> $GITHUB_ENV
       # В контейнере проверяются все протоколы: VLESS, VMess, Trojan, Shadowsocks, Hysteria.
       # Список только через stdin (после merge на раннере); fallback по URL к raw configs/available не используется - иначе обошли бы CIDR и merge.
       - name: "Run checker in Docker (all protocols: Xray + Hysteria)"
