@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Модуль управления xray: конфигурация, запуск, остановка, загрузка.
+Поддерживает автоматическую маршрутизацию через системный прокси (Tailscale, HTTP/SOCKS proxy).
 """
 
 import json
@@ -13,6 +14,7 @@ import sys
 import tempfile
 import time
 import zipfile
+from urllib.parse import urlparse
 
 import requests
 from rich.console import Console
@@ -28,10 +30,59 @@ from .config import (
 console = Console()
 
 
+def _parse_proxy_url(proxy_url: str) -> dict:
+    """
+    Парсит URL прокси (socks5://host:port, http://host:port и т.д.)
+    Возвращает словарь: {"protocol": "socks"|"http", "host": ..., "port": ...}
+    """
+    if not proxy_url:
+        return {}
+    
+    # Убираем возможные пробелы
+    proxy_url = proxy_url.strip()
+    
+    # Поддержка разных форматов: socks5h://, socks5://, http://, https://
+    parsed = urlparse(proxy_url)
+    
+    protocol = parsed.scheme.lower()
+    host = parsed.hostname
+    port = parsed.port
+    
+    # Определяем тип прокси для Xray
+    if protocol in ("socks5", "socks5h", "socks"):
+        xray_protocol = "socks"
+        port = port or 1080  # Дефолтный SOCKS порт
+    elif protocol in ("http", "https"):
+        xray_protocol = "http"
+        port = port or (443 if protocol == "https" else 8080)
+    else:
+        # Неизвестный протокол
+        return {}
+    
+    if not host or not port:
+        return {}
+    
+    return {
+        "protocol": xray_protocol,
+        "host": host,
+        "port": port
+    }
+
+
 def build_xray_config(parsed: dict, socks_port: int) -> dict:
     """
     Собирает конфиг xray: inbound SOCKS, outbound для различных протоколов.
     Поддерживает: VLESS, VMess, Trojan, Shadowsocks.
+    
+    АВТОМАТИЧЕСКАЯ МАРШРУТИЗАЦИЯ ЧЕРЕЗ СИСТЕМНЫЙ ПРОКСИ:
+    Если заданы переменные окружения HTTPS_PROXY, HTTP_PROXY или ALL_PROXY,
+    весь трафик Xray будет автоматически идти через этот прокси (Tailscale, корпоративный прокси и т.д.)
+    
+    Поддерживаемые форматы прокси:
+    - socks5://host:port
+    - socks5h://host:port (DNS через прокси)
+    - http://host:port
+    - https://host:port
     """
     protocol = parsed.get("protocol", "vless")
     address = parsed.get("address", "")
@@ -144,6 +195,75 @@ def build_xray_config(parsed: dict, socks_port: int) -> dict:
     else:
         raise ValueError(f"Неподдерживаемый протокол: {protocol}")
     
+    # ============================================================================
+    # УМНАЯ МАРШРУТИЗАЦИЯ ЧЕРЕЗ СИСТЕМНЫЙ ПРОКСИ (Tailscale, корпоративный прокси и т.д.)
+    # ============================================================================
+    # Проверяем переменные окружения в порядке приоритета
+    system_proxy_url = (
+        os.environ.get('HTTPS_PROXY') or 
+        os.environ.get('ALL_PROXY') or 
+        os.environ.get('HTTP_PROXY') or
+        os.environ.get('https_proxy') or  # Поддержка lowercase (Linux-стиль)
+        os.environ.get('all_proxy') or
+        os.environ.get('http_proxy')
+    )
+    
+    outbounds_list = []
+    
+    if system_proxy_url:
+        proxy_info = _parse_proxy_url(system_proxy_url)
+        
+        if proxy_info:
+            proxy_protocol = proxy_info["protocol"]  # "socks" или "http"
+            proxy_host = proxy_info["host"]
+            proxy_port = proxy_info["port"]
+            
+            # Создаём outbound для системного прокси
+            if proxy_protocol == "socks":
+                system_proxy_outbound = {
+                    "tag": "system-proxy",
+                    "protocol": "socks",
+                    "settings": {
+                        "servers": [{
+                            "address": proxy_host,
+                            "port": proxy_port
+                        }]
+                    }
+                }
+            elif proxy_protocol == "http":
+                system_proxy_outbound = {
+                    "tag": "system-proxy",
+                    "protocol": "http",
+                    "settings": {
+                        "servers": [{
+                            "address": proxy_host,
+                            "port": proxy_port
+                        }]
+                    }
+                }
+            else:
+                system_proxy_outbound = None
+            
+            if system_proxy_outbound:
+                outbounds_list.append(system_proxy_outbound)
+                
+                # КРИТИЧЕСКИ ВАЖНО: заставляем основной outbound идти через системный прокси
+                outbound["proxySettings"] = {
+                    "tag": "system-proxy"
+                }
+                
+                # Логируем для отладки (только при первом запуске)
+                if os.environ.get("DEBUG_FIRST_FAIL") == "true":
+                    console.print(f"[dim]Xray будет маршрутизировать трафик через системный прокси: {proxy_protocol}://{proxy_host}:{proxy_port}[/dim]")
+    
+    # Добавляем основной outbound (он уже настроен идти через системный прокси, если тот есть)
+    outbounds_list.append(outbound)
+    
+    # Добавляем direct на случай, если понадобится прямое соединение
+    outbounds_list.append({"protocol": "freedom", "tag": "direct"})
+    
+    # ============================================================================
+    
     return {
         "log": {"loglevel": "error"},
         "inbounds": [
@@ -155,10 +275,7 @@ def build_xray_config(parsed: dict, socks_port: int) -> dict:
                 "tag": "in",
             }
         ],
-        "outbounds": [
-            outbound,
-            {"protocol": "freedom", "tag": "direct"},
-        ],
+        "outbounds": outbounds_list,
         "routing": {
             "domainStrategy": "IPIfNonMatch",
             "rules": [
