@@ -23,17 +23,6 @@ from typing import Optional
 # чтобы ключи проходили проверку как в мобильных клиентах (меньше ложных «рабочих»).
 from dotenv import load_dotenv
 load_dotenv()
-os.environ.setdefault("STRONG_STYLE_TEST", "true")
-os.environ.setdefault("REQUIRE_HTTPS", "true")
-os.environ.setdefault("STRICT_MODE", "true")
-os.environ.setdefault("STRICT_MODE_REQUIRE_ALL", "true")
-os.environ.setdefault("STRONG_ATTEMPTS", "3")
-os.environ.setdefault("STRONG_STYLE_TIMEOUT", "12")
-os.environ.setdefault("STRONG_MAX_RESPONSE_TIME", "3")
-os.environ.setdefault("TEST_URLS_HTTPS", "https://www.gstatic.com/generate_204")
-os.environ.setdefault("MIN_SUCCESSFUL_REQUESTS", "2")
-os.environ.setdefault("MIN_SUCCESSFUL_URLS", "2")
-os.environ.setdefault("STABILITY_CHECKS", "2")
 
 import requests
 from rich.console import Console
