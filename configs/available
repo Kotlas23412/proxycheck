@@ -781,7 +781,7 @@ ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTp6RExtZVdSc2ZjRmRLVDFUcHkwMnhvZEVUb3FDbGRUeHZ
 vless://b2c47b38-23bf-4469-b477-e52206bbb8c1@104.17.148.22:8443?type=ws&security=tls&encryption=none&fp=chrome&sni=aged-sun-9128.danicng13.workers.dev&host=aged-sun-9128.danicng13.workers.dev&alpn=h2%2Chttp/1.1#🇨🇦 Канада
 vless://d35db0ad-224c-4bf2-9ddc-f72eb26d3938@87.106.189.9:443?type=tcp&security=reality&encryption=none&fp=chrome&pbk=h21nIjwib-HnJm4LOS6s80wmiAmib0WF2-qEe9qYg1M&sid=2d05&sni=yahoo.com#🇩🇪 Германия
 vless://d1209ffb-c159-48d5-b40d-542ce11fc768@144.31.217.91:10121?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=4DdA8dBVn5zB_UTbgBY45YqM0HU8zrjXYdzg3-wz5Rg&sid=9c2a7d4e5f18b6a3&sni=apple.com#🇳🇴 Норвегия
-vless://5dc15e15-f285-4a9d-959b-0e4fbdd77b63@cf.008500.xyz:443?type=ws&security=tls&encryption=none&fp=chrome&sni=powered-by-surena.configfarsi6982dd6e0355e.workers.dev&host=powered-by-surena.configfarsi6982dd6e0355e.workers.dev#🇭🇺 Венгрия
+vless://5dc15e15-f285-4a9d-959b-0e4fbdd77b63@cf.008500.xyz:443?type=ws&security=tls&encryption=none&fp=chrome&sni=powered-by-surena.configfarsi6982dd6e0355e.workers.dev&host=powered-by-surena.configfarsi6982dd6e0355e.workers.dev#🇺🇸 США
 vless://5aa7d17e-7dc2-46dd-9acf-c3c97440259b@104.17.145.59:80?type=ws&security=none&encryption=none&host=sss.yaml7.ggff.net#🇨🇦 Канада
 vless://6202b230-417c-4d8e-b624-0f71afa9c75d@57.129.47.36:2053?type=ws&security=tls&encryption=none&sni=sni.111000.v6.navy&host=sni.111000.v6.navy#🇩🇪 Германия
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTo3YTEwNmFmYzMzZWFhMjYxQDE0OC4xMTMuMTM5LjE2MDo0NjUzNA==#🇨🇦 Канада
@@ -1049,7 +1049,7 @@ vless://2ac6e527-6410-48ce-b9ba-cc8135ee2a3b@104.16.9.24:80?path=%2F%3Fed%3D2048
 vless://7890ce31-9a25-4fd4-90e7-80e5823ff510@172.64.147.255:8880?encryption=none&type=ws&security=none&path=%2Ftelegram%F0%9F%87%A8%F0%9F%87%B3&host=frejd.11258.workers.dev#🇨🇦 Канада
 vless://7890ce31-9a25-4fd4-90e7-80e5823ff510@wangcai115.cloudflare.182682.xyz:8880?encryption=none&security=none&sni=Telegram-channel-WangCai2&type=ws&host=frejd.11258.workers.dev&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3%40WangCai2%2F%3Fed%3D2560#🇨🇦 Канада
 vless://90c9c25c-df6c-4438-83d3-ef97166a9184@85.209.159.22:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=A3PWLCRX9oeSyPvrmrwj2jUXcLo2uCwAISRBHtNE1Xw&sid=&sni=5post-gate.x5.ru#🇵🇱 Польша
-vless://c4f2dee2-14e3-4c02-91e9-31c7917e239c@fi-bridge.sbrf-cdn342.ru:443?type=tcp&security=tls&encryption=none&flow=xtls-rprx-vision&sni=sub.sbrf-cdn342.ru&alpn=http/1.1#🇫🇮 Финляндия
+vless://c4f2dee2-14e3-4c02-91e9-31c7917e239c@fi-bridge.sbrf-cdn342.ru:443?type=tcp&security=tls&encryption=none&flow=xtls-rprx-vision&sni=sub.sbrf-cdn342.ru&alpn=http/1.1#🇫🇮 Финляндия | LTE
 vless://807363f4-671b-4117-ac80-cd414bcddf8d@217.13.104.133:7443?flow=xtls-rprx-vision&encryption=none&type=tcp&security=reality&fp=randomized&sni=sun6-22.userapi.com&pbk=o-KQ25NPI-J6ON1IcuN6b9NAJHCL5lwdj7wagLbfOxY&sid=0a2585c3c950f29a&spx=%2F#🇭🇺 Венгрия | LTE
 vless://6202b230-417c-4d8e-b624-0f71afa9c75d@51.75.24.59:8443?path=%2F%3Fed%3D2560%26Telegram%F0%9F%87%A8%F0%9F%87%B3%20%40WangCai2&security=tls&encryption=none&insecure=0&host=sni.111000.v6.navy&type=ws&allowInsecure=0&sni=sni.111000.v6.navy#🇫🇷 Франция
 vless://5152ff5b-56f7-400c-bc1d-2f1dd1ac1e13@www.speedtest.net:80?encryption=none&security=none&type=ws&host=010.electrocellco-cf-010.workers.dev&path=/eyJqdW5rIjoiM3JsR054alF6R2JFTTEiLCJwcm90b2NvbCI6InZsIiwibW9kZSI6InByb3h5aXAiLCJwYW5lbElQcyI6WyIxMjUuNy4yNC4yNTEiXX0=?ed=2560#🇨🇦 Канада
@@ -1123,7 +1123,7 @@ vless://a1f1933f-6152-4bf4-8cb1-742cade818c8@5.255.102.217:2012?encryption=none&
 vless://6202b230-417c-4d8e-b624-0f71afa9c75d@134.209.30.166:443?path=/?ed=2560&Telegram🎖@AliXTso&security=tls&encryption=none&host=sni.111000.indevs.in&type=ws&sni=sni.111000.indevs.in#🇬🇧 Великобритания
 vless://cdec8542-a21f-4377-9da3-ea60bb6d3a30@104.18.12.229:2052?encryption=none&type=ws&security=none&path=%F0%9F%94%92&host=chosenflyesqt-q3y28ipf-v2.chosen-fly-esqt.workers.dev#🇨🇦 Канада
 vless://6202b230-417c-4d8e-b624-0f71afa9c75d@91.107.139.23:7002?encryption=none&security=tls&sni=sni.111000.indevs.in&insecure=0&allowInsecure=0&type=ws&host=sni.111000.indevs.in&path=%2F%3Fed%3D2560%26Telegram%F0%9F%87%A8%F0%9F%87%B3%40WangCai2#🇩🇪 Германия
-vless://5dc15e15-f285-4a9d-959b-0e4fbdd77b63@cf.008500.xyz:443?path=/?ed=2560&security=tls&encryption=none&insecure=0&host=powered-by-surena.configfarsi695fd4636f1c8.workers.dev&fp=firefox&type=ws&allowInsecure=0&sni=powered-by-surena.configfarsi695fd4636f1c8.workers.dev#🇭🇺 Венгрия
+vless://5dc15e15-f285-4a9d-959b-0e4fbdd77b63@cf.008500.xyz:443?path=/?ed=2560&security=tls&encryption=none&insecure=0&host=powered-by-surena.configfarsi695fd4636f1c8.workers.dev&fp=firefox&type=ws&allowInsecure=0&sni=powered-by-surena.configfarsi695fd4636f1c8.workers.dev#🇺🇸 США
 vless://6202b230-417c-4d8e-b624-0f71afa9c75d@141.94.77.169:2053?encryption=none&security=tls&sni=sni.111000.v6.navy&insecure=0&allowInsecure=0&type=ws&host=sni.111000.v6.navy&path=%2F%3Fed%3D2560%26Telegram%F0%9F%87%A8%F0%9F%87%B3%2B%40WangCai2#🇫🇷 Франция
 vless://9e76cfb8-b7a6-40f6-c2aa-9905aa19f31b@47.83.153.19:59750?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.amd.com&fp=chrome&pbk=W9BjX6YmCIVsjhKMlz233Yoe0xcf0SVHfvPKqbf3vCg&type=tcp&headerType=none#🇭🇰 Гонконг, Особый Административный Район Китая
 ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTprMWRCT21PQjRvcWk3VW1wMzdhMWJRQDgyLjM4LjMxLjIxNzo4MDgw#🇳🇱 Нидерланды
@@ -1303,3 +1303,4 @@ vless://725cb3e5-c6e9-4de7-bec4-3669681e595f@217.13.104.213:443?flow=xtls-rprx-v
 hysteria2://0f771058-7892-4d46-b77e-a69e811b9cbc@84.201.25.156:443/?insecure=1&sni=hls-svod.itunes.apple.com#🇩🇪 Германия
 hysteria2://72aaf68b-fca5-48fa-9ba3-b0a6fb9990d2@45.196.219.119:43629?insecure=1&sni=acckhk.fe-9.top&fastopen=1#🇭🇰 Гонконг, Особый Административный Район Китая
 hysteria2://2c833c5d-cbcc-4afb-89ba-d17dc39db6f0@75.127.13.83:47974?insecure=1&sni=www.bing.com#🇺🇸 США
+hysteria2://b688ce0f-9201-4e8e-a67a-f3be2c6aa201@de.mjhy2.com:1443?insecure=1&sni=de.mjhy2.com#🇩🇪 Германия
