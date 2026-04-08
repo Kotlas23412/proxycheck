@@ -26,6 +26,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  DEBUG_PROXY_IP: 'true'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   MODE: merge
   LINKS_FILE: links.txt
