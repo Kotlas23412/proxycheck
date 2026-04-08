@@ -12,11 +12,6 @@ on:
     types: [completed]
     branches: [main]
   workflow_dispatch:
-    inputs:
-      phone_proxy_url:
-        description: "URL прокси телефона (если пусто — прямой маршрут GitHub)"
-        required: false
-        type: string
 
 concurrency:
   group: xraycheck-serial
@@ -116,6 +111,21 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Connect to Tailscale (Exit Node)
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          args: --exit-node=100.93.1.84 --exit-node-allow-lan-access=true
+
+      - name: Verify Tailscale connection
+        run: |
+          echo "=== Tailscale Status ==="
+          tailscale status
+          echo ""
+          echo "=== Current IP (should be from Russia) ==="
+          curl -s https://ipinfo.io/json | jq '.' || echo "Failed to get IP info"
+          echo ""
+
       - name: Attempt to update cidrlist from CIDR_WHITELIST_URL (if changed)
         id: update_cidrlist
         run: |
@@ -204,6 +214,21 @@ jobs:
         with:
           ref: main
           fetch-depth: 1
+
+      - name: Connect to Tailscale (Exit Node)
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          args: --exit-node=100.93.1.84 --exit-node-allow-lan-access=true
+
+      - name: Verify Tailscale connection
+        run: |
+          echo "=== Tailscale Status ==="
+          tailscale status
+          echo ""
+          echo "=== Current IP (should be from Russia) ==="
+          curl -s https://ipinfo.io/json | jq '.' || echo "Failed to get IP info"
+          echo ""
 
       - name: Setup Xray and Hysteria binaries (required for Docker build)
         run: bash tools/setup-binaries.sh
@@ -300,8 +325,6 @@ jobs:
             echo "configs/available is empty before merge; pre-merge geo_only cleared"
           fi
 
-      # Белый список подмешивается в configs/available до Docker, чтобы пройти полную проверку заново в текущем запуске.
-      # Приоритет у новых строк из configs/available; white-list_available используется как дополнение.
       - name: Merge white-list_available with CIDR-filtered available (stdin Docker)
         run: |
           python -c "
@@ -382,46 +405,12 @@ jobs:
               --geo-delay 0.35
             mv configs/available_cidr_geo_pass configs/available
           else
-            # Legacy mode: use CIDR-based filter as before
             python -m lib.filter_configs_by_location_ip configs/available \
               --location "${DOCKER_LOCATION_FILTER}" \
               --cidr-file cidrlist \
               --fail-open
           fi
 
-      - name: Connect to Tailscale (auto, non-blocking)
-        id: ts_connect
-        if: ${{ inputs.phone_proxy_url != '' || vars.PHONE_PROXY_URL != '' }}
-        continue-on-error: true
-        uses: tailscale/github-action@v2
-        with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-
-      - name: "Auto route: phone proxy first, GitHub direct fallback"
-        id: route_select
-        run: |
-          set -euo pipefail
-          PROXY_URL="${{ inputs.phone_proxy_url || vars.PHONE_PROXY_URL }}"
-          echo "=== Network bootstrap ==="
-          if [ -z "${PROXY_URL}" ]; then
-            echo "::notice::PHONE_PROXY_URL не задан. Работаем напрямую."
-            exit 0
-          fi
-          if PROXY_IP="$(curl -fsS --max-time 30 -x "${PROXY_URL}" https://ifconfig.me)"; then
-            echo "HTTP_PROXY=${PROXY_URL}" >> "$GITHUB_ENV"
-            echo "HTTPS_PROXY=${PROXY_URL}" >> "$GITHUB_ENV"
-            echo "ALL_PROXY=${PROXY_URL}" >> "$GITHUB_ENV"
-            echo "::notice::Phone proxy is active. IP: ${PROXY_IP}"
-          else
-            echo "::warning::Phone proxy is unavailable."
-          fi
-      - name: Export proxy vars for Docker build context
-        if: env.HTTP_PROXY != ''
-        run: |
-          echo "DOCKER_BUILDKIT_PROXY_HTTP=$HTTP_PROXY" >> $GITHUB_ENV
-          echo "DOCKER_BUILDKIT_PROXY_HTTPS=$HTTPS_PROXY" >> $GITHUB_ENV
-      # В контейнере проверяются все протоколы: VLESS, VMess, Trojan, Shadowsocks, Hysteria.
-      # Список только через stdin (после merge на раннере); fallback по URL к raw configs/available не используется - иначе обошли бы CIDR и merge.
       - name: "Run checker in Docker (all protocols: Xray + Hysteria)"
         run: |
           touch .before-docker-run
@@ -442,9 +431,6 @@ jobs:
             cat configs/available | docker compose run --rm -T \
             -e OUTPUT_FILE="$OUTPUT_FILE" \
             -e GITHUB_ACTIONS=true \
-            -e HTTP_PROXY="$HTTP_PROXY" \
-            -e HTTPS_PROXY="$HTTPS_PROXY" \
-            -e ALL_PROXY="$ALL_PROXY" \
             -e OUTPUT_DIR="$OUTPUT_DIR" \
             -e MODE="$MODE" \
             -e NOTWORKERS_UPDATE_ENABLED="$NOTWORKERS_UPDATE_ENABLED" \
@@ -591,14 +577,6 @@ jobs:
         env:
           AUTO_COMMENT: ${{ env.AUTO_COMMENT }}
 
-      - name: Disable proxy to allow Git push and caches
-        if: always()
-        run: |
-          echo "HTTP_PROXY=" >> "$GITHUB_ENV"
-          echo "HTTPS_PROXY=" >> "$GITHUB_ENV"
-          echo "ALL_PROXY=" >> "$GITHUB_ENV"
-
-      # white-list_input создаётся локально на раннере (копия stdin Docker), в репозиторий не пушим.
       - name: Commit and push configs/white-list_available, configs/white-list_available(top100)
         run: |
           git config user.name "github-actions[bot]"
@@ -607,13 +585,11 @@ jobs:
           python tools/encode_configs_base64.py \
             configs/white-list_available \
             "configs/white-list_available(top100)"
-          # configs/white-list_input - не encode в configs/base64 и не git add (см. комментарий к шагу выше)
           for f in configs/white-list_available "configs/white-list_available(top100)"; do
             [ -f "$f" ] && git add "configs/base64/$(basename "$f")"
           done
           if [ -f "configs/white-list_available" ]; then git add configs/white-list_available; fi
           if [ -f "configs/white-list_available(top100)" ]; then git add "configs/white-list_available(top100)"; fi
-          # if [ -f "configs/white-list_input" ]; then git add configs/white-list_input; fi
           if ! git diff --cached --quiet; then
             NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
             C=$(wc -l < "configs/white-list_available" 2>/dev/null || echo "0")
@@ -650,8 +626,6 @@ jobs:
       - name: Prepare Telegram stats
         id: telegram_stats
         run: |
-          # Для Telegram берём реальный вход в Docker из white-list_input (копия stdin Docker).
-          # Fallback на configs/available оставляем как запасной вариант.
           if [ -f "configs/white-list_input" ]; then
             K_IN=$(wc -l < configs/white-list_input 2>/dev/null || echo 0)
           else
