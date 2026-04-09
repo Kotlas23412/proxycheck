@@ -470,7 +470,7 @@ jobs:
           print(f'RU split: xray main={bx} ru={rx}; hysteria main={bh} ru={rh}')
           "
 
-       - name: Xray fast screen (phase 1)
+      - name: Xray fast screen (phase 1)
         env:
           MODE: single
           CHECKER_DIAG_FAILURE_TYPES: 'true'
@@ -502,7 +502,7 @@ jobs:
             : > "configs/available_phase1_candidates"
           fi
 
-       - name: Xray full strong (phase 2)
+      - name: Xray full strong (phase 2)
         env:
           MODE: single
           OUTPUT_FILE: available
@@ -527,7 +527,7 @@ jobs:
             echo "No phase1 candidates for full check"
             : > "configs/available"
           fi
-
+          
       - name: RU soft pool (phase 3) → configs/ru, configs/ru(top100)
         if: env.DOCKER_LOCATION_FILTER == 'RU'
         env:
