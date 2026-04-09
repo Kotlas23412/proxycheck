@@ -13,7 +13,6 @@ import subprocess
 import tempfile
 import time
 import threading
-import requests  # Добавлен импорт requests для точной проверки
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
@@ -117,51 +116,76 @@ def _check_hysteria_reachable(address: str, port: int, timeout: float) -> tuple[
         return (False, timeout)
 
 
-def exact_url_test(port: int, url: str, timeout: float = 10.0) -> Tuple[bool, float, Optional[str]]:
+def _run_strong_style_test(port: int, urls: list, should_debug_flag: bool) -> tuple[bool, list, int, int]:
     """
-    Точный аналог Libcore.urlTest из Android (NekoBox/Matsuri). 
-    Использует socks5h (DNS через прокси) и замеряет чистый пинг.
+    STRONG_STYLE_TEST: несколько попыток через SOCKS-прокси к TEST_URLS/TEST_URLS_HTTPS.
+    Возвращает (passed, response_times, successful_urls, failed_urls).
+    Логика полностью берётся из конфига (STRONG_ATTEMPTS, STRONG_STYLE_TIMEOUT, и т.д.).
     """
+    import requests as _requests
+
     proxies = {
         "http": f"socks5h://127.0.0.1:{port}",
         "https": f"socks5h://127.0.0.1:{port}",
     }
 
-    # ============ ДИАГНОСТИКА: ПРОВЕРЯЕМ IP (ТОЛЬКО ОДИН РАЗ) ============
-    import os
-    if os.environ.get("DEBUG_PROXY_IP") == "true":
-        try:
-            ip_check = requests.get("https://ifconfig.me", proxies=proxies, timeout=5)
-            detected_ip = ip_check.text.strip()
-            console.print(f"[yellow]DEBUG: Трафик через Xray выходит с IP:[/yellow] {detected_ip}")
-        except Exception as e:
-            console.print(f"[red]DEBUG: Не удалось определить выходной IP:[/red] {e}")
-    
-    start_time = time.perf_counter()
-    try:
-        # allow_redirects=False для скорости. verify=True обязательно для защиты от подмены DPI!
-        r = requests.get(url, proxies=proxies, timeout=timeout, allow_redirects=False, verify=True)
-        elapsed_ms = (time.perf_counter() - start_time) * 1000
-        
-        # 301/302 редирект (например, Инстаграм на страницу логина) считается успехом
-        if 200 <= r.status_code < 400:
-            return True, elapsed_ms, None
+    response_times = []
+    successful_urls = 0
+    failed_urls = 0
+
+    connect_t = max(float(STRONG_STYLE_CONNECT_T_MIN), float(STRONG_STYLE_TIMEOUT) * 0.4)
+    read_t = max(float(STRONG_STYLE_READ_T_MIN), float(STRONG_STYLE_TIMEOUT) * 0.7)
+    timeout_tuple = (connect_t, read_t)
+
+    for url in urls:
+        url_ok = False
+        for attempt in range(int(STRONG_ATTEMPTS)):
+            try:
+                start = time.perf_counter()
+                verify_ssl = (
+                    url.startswith("https://")
+                    and not (os.environ.get("VERIFY_HTTPS_SSL", "false").lower() in ("false", "0", "no"))
+                )
+                r = _requests.get(
+                    url,
+                    proxies=proxies,
+                    timeout=timeout_tuple,
+                    allow_redirects=True,
+                    verify=verify_ssl,
+                )
+                elapsed = time.perf_counter() - start
+                if check_response_valid(r, elapsed, MIN_RESPONSE_SIZE, float(STRONG_MAX_RESPONSE_TIME)):
+                    response_times.append(elapsed)
+                    url_ok = True
+                    break
+                else:
+                    if should_debug_flag:
+                        logger.debug(f"Strong test attempt {attempt+1}: bad response {r.status_code} / {elapsed:.2f}s for {url}")
+            except Exception as e:
+                if should_debug_flag:
+                    logger.debug(f"Strong test attempt {attempt+1} exception for {url}: {e}")
+                continue
+
+        if url_ok:
+            successful_urls += 1
         else:
-            return False, elapsed_ms, f"Bad HTTP status: {r.status_code}"
-            
-    except requests.exceptions.Timeout:
-        return False, timeout * 1000, "Timeout"
-    except Exception as e:
-        elapsed_ms = (time.perf_counter() - start_time) * 1000
-        return False, elapsed_ms, f"Connection error: {str(e)}"
+            failed_urls += 1
+
+    if STRICT_MODE_REQUIRE_ALL:
+        passed = successful_urls >= len(urls) and failed_urls == 0
+    else:
+        passed = successful_urls >= int(MIN_SUCCESSFUL_URLS)
+
+    return passed, response_times, successful_urls, failed_urls
 
 
 def check_key_e2e(vless_line: str, debug: bool = False, cache: Optional[dict] = None) -> tuple[str, bool, Optional[dict]]:
     """
-    End-to-end проверка с расширенными возможностями.
+    End-to-end проверка прокси-ключа через локальный xray SOCKS-прокси.
+    Использует TEST_URLS / TEST_URLS_HTTPS из конфига (настраивается через env).
     """
     should_debug_flag = should_debug_func(debug)
-    
+
     # Проверка кэша
     if cache is not None and ENABLE_CACHE:
         key_hash = get_key_hash(vless_line)
@@ -182,7 +206,7 @@ def check_key_e2e(vless_line: str, debug: bool = False, cache: Optional[dict] = 
                 "failure_type": None,
             }
             return (vless_line, cached_result, metrics)
-    
+
     metrics = {
         "response_times": [],
         "geolocation": None,
@@ -195,7 +219,7 @@ def check_key_e2e(vless_line: str, debug: bool = False, cache: Optional[dict] = 
         "transient_exhausted": False,
         "failure_type": None,
     }
-    
+
     parsed = parse_proxy_url(vless_line)
     if not parsed:
         metrics["failure_type"] = "PARSE_ERROR"
@@ -203,7 +227,7 @@ def check_key_e2e(vless_line: str, debug: bool = False, cache: Optional[dict] = 
             logger.debug("Не удалось разобрать прокси-ссылку.")
         return (vless_line, False, metrics)
 
-    # Hysteria
+    # Hysteria: простая TCP-проверка достижимости сервера
     if parsed.get("protocol") in ("hysteria", "hysteria2"):
         timeout = CONNECT_TIMEOUT_SLOW if USE_ADAPTIVE_TIMEOUT else CONNECT_TIMEOUT
         ok, latency = _check_hysteria_reachable(parsed["address"], parsed["port"], float(timeout))
@@ -307,7 +331,7 @@ def check_key_e2e(vless_line: str, debug: bool = False, cache: Optional[dict] = 
         ):
             proc = tw.proc
             started_via_reload = True
-            
+
         if not started_via_reload:
             if XRAY_REUSE_WORKER and tw.proc is not None:
                 unregister_process(tw.proc, port)
@@ -317,14 +341,14 @@ def check_key_e2e(vless_line: str, debug: bool = False, cache: Optional[dict] = 
             if XRAY_REUSE_WORKER:
                 tw.proc = proc
             register_process(proc, port)
-            
+
             waited = 0.0
             while waited < XRAY_STARTUP_WAIT:
                 if proc.poll() is not None:
                     break
                 time.sleep(XRAY_STARTUP_POLL_INTERVAL)
                 waited += XRAY_STARTUP_POLL_INTERVAL
-                
+
             if proc.poll() is not None:
                 unregister_process(proc, port)
                 metrics["transient_failure"] = True
@@ -342,43 +366,128 @@ def check_key_e2e(vless_line: str, debug: bool = False, cache: Optional[dict] = 
                 return (vless_line, False, metrics)
 
         # =====================================================================
-        # НОВАЯ ANDROID-ПОДОБНАЯ E2E ПРОВЕРКА ЧЕРЕЗ TAILSCALE
+        # ОСНОВНАЯ ПРОВЕРКА: TEST_URLS из конфига (env-переменные)
+        # TEST_URLS:       http://www.google.com/generate_204,...
+        # TEST_URLS_HTTPS: https://www.gstatic.com/generate_204
+        # Управляется через STRONG_STYLE_TEST, STRONG_ATTEMPTS, STRONG_STYLE_TIMEOUT,
+        # MIN_SUCCESSFUL_URLS, STRICT_MODE_REQUIRE_ALL и т.д.
         # =====================================================================
 
-        # 1. МАГИЯ ИЗ ANDROID: ждем 500мс после открытия порта.
-        time.sleep(0.5)
+        # Собираем список URL для проверки
+        urls_to_test: list[str] = []
+        if REQUIRE_HTTPS and TEST_URLS_HTTPS:
+            for u in str(TEST_URLS_HTTPS).split(","):
+                u = u.strip()
+                if u:
+                    urls_to_test.append(u)
+        if TEST_URLS:
+            for u in str(TEST_URLS).split(","):
+                u = u.strip()
+                if u and u not in urls_to_test:
+                    urls_to_test.append(u)
+        # Фоллбэк если ничего не задано
+        if not urls_to_test:
+            urls_to_test = ["http://www.google.com/generate_204"]
 
-        # 2. БЫСТРЫЙ ТЕСТ (Проверка живости сервера, timeout 10s)
-        metrics["total_requests"] = 1
-        is_alive, ping_ms, err = exact_url_test(port, "https://cp.cloudflare.com/generate_204", timeout=10.0)
-        
-        if not is_alive:
-            metrics["failure_type"] = "DEAD_PROXY_OR_TIMEOUT"
-            metrics["failed_urls"] = 1
-            if should_debug_flag:
-                logger.debug(f"Прокси мертв или недоступен: {err}")
-            unregister_process(proc, port)
-            return (vless_line, False, metrics)
+        proxies_dict = {
+            "http": f"socks5h://127.0.0.1:{port}",
+            "https": f"socks5h://127.0.0.1:{port}",
+        }
 
-        metrics["successful_requests"] = 1
-        metrics["total_requests"] = 2
-        
-        # 3. ТЕСТ НА ПРОБИВАНИЕ ТСПУ (Tailscale -> Телефон -> Прокси -> Инстаграм)
-        is_bypassing, bypass_ping, dpi_err = exact_url_test(port, "https://www.instagram.com/", timeout=15.0)
+        if STRONG_STYLE_TEST:
+            passed, response_times, successful_urls, failed_urls = _run_strong_style_test(
+                port, urls_to_test, should_debug_flag
+            )
+            metrics["response_times"] = response_times
+            metrics["successful_urls"] = successful_urls
+            metrics["failed_urls"] = failed_urls
+            metrics["total_requests"] = successful_urls + failed_urls
+            metrics["successful_requests"] = successful_urls
 
-        if not is_bypassing:
-            metrics["failure_type"] = "BLOCKED_BY_DPI_RU"
-            metrics["failed_urls"] = 1
-            metrics["successful_urls"] = 1
-            if should_debug_flag:
-                logger.debug(f"Жив, но ЗАБЛОКИРОВАН В РФ (DPI): {dpi_err}")
-            unregister_process(proc, port)
-            return (vless_line, False, metrics)
+            if not passed:
+                metrics["failure_type"] = "URL_TEST_FAILED"
+                unregister_process(proc, port)
+                return (vless_line, False, metrics)
+        else:
+            # Упрощённая проверка: make_request по каждому URL
+            response_times = []
+            successful_urls = 0
+            failed_urls = 0
+            total_requests = 0
 
-        # 4. Проверка геолокации (если нужно по конфигу)
+            connect_timeout = CONNECT_TIMEOUT_SLOW if USE_ADAPTIVE_TIMEOUT else CONNECT_TIMEOUT
+
+            for url in urls_to_test:
+                url_ok = False
+                for attempt in range(int(MAX_RETRIES) + 1):
+                    total_requests += 1
+                    try:
+                        ok, elapsed, resp = make_request(
+                            url,
+                            proxies=proxies_dict,
+                            connect_timeout=float(connect_timeout),
+                            read_timeout=float(MAX_RESPONSE_TIME),
+                            verify_https=(url.startswith("https://") and REQUIRE_HTTPS),
+                            debug=should_debug_flag,
+                        )
+                        if ok:
+                            response_times.append(elapsed)
+                            url_ok = True
+                            break
+                    except Exception as e:
+                        if should_debug_flag:
+                            logger.debug(f"make_request attempt {attempt+1} exception: {e}")
+                        if attempt < int(MAX_RETRIES):
+                            time.sleep(float(RETRY_DELAY_BASE) * (float(RETRY_DELAY_MULTIPLIER) ** attempt))
+                        continue
+
+                if url_ok:
+                    successful_urls += 1
+                else:
+                    failed_urls += 1
+
+            metrics["response_times"] = response_times
+            metrics["successful_urls"] = successful_urls
+            metrics["failed_urls"] = failed_urls
+            metrics["total_requests"] = total_requests
+            metrics["successful_requests"] = successful_urls
+
+            if STRICT_MODE_REQUIRE_ALL:
+                passed = successful_urls >= len(urls_to_test) and failed_urls == 0
+            else:
+                passed = successful_urls >= int(MIN_SUCCESSFUL_URLS)
+
+            if not passed:
+                metrics["failure_type"] = "URL_TEST_FAILED"
+                unregister_process(proc, port)
+                return (vless_line, False, metrics)
+
+        # Проверка задержки
+        if metrics["response_times"]:
+            avg_rt = sum(metrics["response_times"]) / len(metrics["response_times"])
+            metrics["avg_response_time"] = avg_rt
+            from .config import MAX_LATENCY_MS
+            if avg_rt * 1000 > float(MAX_LATENCY_MS):
+                metrics["failure_type"] = "HIGH_LATENCY"
+                unregister_process(proc, port)
+                return (vless_line, False, metrics)
+
+        # Stability checks (дополнительные прогоны с паузой)
+        if int(STABILITY_CHECKS) > 0:
+            for sc in range(int(STABILITY_CHECKS)):
+                time.sleep(float(STABILITY_CHECK_DELAY))
+                sc_passed, sc_times, sc_ok, sc_fail = _run_strong_style_test(
+                    port, urls_to_test[:1], should_debug_flag  # проверяем только первый URL
+                )
+                if not sc_passed:
+                    metrics["failure_type"] = "STABILITY_CHECK_FAILED"
+                    unregister_process(proc, port)
+                    return (vless_line, False, metrics)
+                metrics["response_times"].extend(sc_times)
+
+        # Проверка геолокации
         if CHECK_GEOLOCATION:
-            proxies_geo = {"http": f"socks5h://127.0.0.1:{port}", "https": f"socks5h://127.0.0.1:{port}"}
-            geolocation = get_geolocation(proxies_geo)
+            geolocation = get_geolocation(proxies_dict)
             if geolocation:
                 metrics["geolocation"] = geolocation
                 if not check_geolocation_allowed(geolocation, ALLOWED_COUNTRIES):
@@ -386,23 +495,16 @@ def check_key_e2e(vless_line: str, debug: bool = False, cache: Optional[dict] = 
                     unregister_process(proc, port)
                     return (vless_line, False, metrics)
 
-        # ЕСЛИ ДОШЛИ СЮДА - ПРОКСИ ИДЕАЛЬНЫЙ
-        metrics["successful_urls"] = 2
-        metrics["successful_requests"] = 2
-        metrics["failed_urls"] = 0
-        metrics["response_times"] = [ping_ms / 1000.0, bypass_ping / 1000.0]
-        metrics["avg_response_time"] = (ping_ms + bypass_ping) / 2000.0
-        
         # Сохранение в кэш
         if cache is not None and ENABLE_CACHE:
             key_hash = get_key_hash(vless_line)
-            cache[key_hash] = {'result': True, 'timestamp': time.time()}
+            cache[key_hash] = {"result": True, "timestamp": time.time()}
 
         if XRAY_REUSE_WORKER:
             _preserve_xray_process = True
         else:
             unregister_process(proc, port)
-            
+
         return (vless_line, True, metrics)
 
     except FileNotFoundError:
@@ -413,6 +515,8 @@ def check_key_e2e(vless_line: str, debug: bool = False, cache: Optional[dict] = 
         return (vless_line, False, metrics)
     except Exception as e:
         metrics["failure_type"] = "EXCEPTION"
+        if should_debug_flag:
+            logger.debug(f"check_key_e2e exception: {e}", exc_info=True)
         _ep = proc or (tw.proc if XRAY_REUSE_WORKER else None)
         if _ep:
             unregister_process(_ep, port)
