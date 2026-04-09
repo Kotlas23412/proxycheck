@@ -470,7 +470,7 @@ jobs:
           print(f'RU split: xray main={bx} ru={rx}; hysteria main={bh} ru={rh}')
           "
 
-      - name: Xray fast screen (phase 1)
+       - name: Xray fast screen (phase 1)
         env:
           MODE: single
           CHECKER_DIAG_FAILURE_TYPES: 'true'
@@ -482,7 +482,7 @@ jobs:
           STRONG_STYLE_TIMEOUT: '3'
           STRONG_STYLE_CONNECT_T_MIN: '1'
           STRONG_STYLE_READ_T_MIN: '2'
-          STRONG_MAX_RESPONSE_TIME: '2.5' # Смягчено с 1.5 до 2.5
+          STRONG_MAX_RESPONSE_TIME: '2.5'
           XRAY_STARTUP_WAIT: '1.5'
           XRAY_PORT_WAIT: '5'
           STABILITY_CHECKS: '1'
@@ -496,15 +496,14 @@ jobs:
           mkdir -p configs
           rm -f "configs/available_phase1_candidates" "configs/available_phase1_candidates(top100)" || true
           if [ -s "configs/merged_xray.txt" ]; then
-            python -m main configs/merged_xray.txt # Изменено с lib.vless_checker
+            python -m lib.vless_checker configs/merged_xray.txt
           else
             echo "No Xray configs to screen"
             : > "configs/available_phase1_candidates"
           fi
 
-      - name: Xray full strong (phase 2)
+       - name: Xray full strong (phase 2)
         env:
-          # --- ФИНАЛЬНАЯ ПРОВЕРКА (ИМИТАЦИЯ v2rayNG) ---
           MODE: single
           OUTPUT_FILE: available
           STRONG_STYLE_TEST: 'true'
@@ -515,7 +514,6 @@ jobs:
           STRONG_MAX_RESPONSE_TIME: 4.5
           STRONG_ATTEMPTS: 1
           STRONG_DOUBLE_CHECK: 'false'
-          # --- Отключаем ненужные параметры ---
           REQUESTS_PER_URL: 1
           MIN_SUCCESSFUL_REQUESTS: 1
           MIN_SUCCESSFUL_URLS: 1
@@ -524,7 +522,7 @@ jobs:
           STRICT_MODE_REQUIRE_ALL: 'false'
         run: |
           if [ -s "configs/available_phase1_candidates" ]; then
-            python -m main configs/available_phase1_candidates # Изменено с lib.vless_checker
+            python -m lib.vless_checker configs/available_phase1_candidates
           else
             echo "No phase1 candidates for full check"
             : > "configs/available"
@@ -533,7 +531,6 @@ jobs:
       - name: RU soft pool (phase 3) → configs/ru, configs/ru(top100)
         if: env.DOCKER_LOCATION_FILTER == 'RU'
         env:
-          # --- МЯГКАЯ ПРОВЕРКА ДЛЯ RU (ИМИТАЦИЯ v2rayNG С ЩЕДРЫМИ ТАЙМАУТАМИ) ---
           MODE: single
           OUTPUT_FILE: ru
           OUTPUT_DIR: configs
@@ -555,7 +552,6 @@ jobs:
           STABILITY_CHECKS: 1
           STRICT_MODE: 'false'
           STRICT_MODE_REQUIRE_ALL: 'false'
-          # Параметры для Hysteria в этом же шаге
           HYSTERIA_STARTUP_WAIT: '6.0'
           HYSTERIA_PORT_WAIT: '22.0'
         run: |
@@ -655,7 +651,7 @@ jobs:
           )
           "
           if [ -s configs/.phase3_xray.txt ]; then
-            python -m main configs/.phase3_xray.txt # Изменено с lib.vless_checker
+            python -m lib.vless_checker configs/.phase3_xray.txt
           fi
           if [ -s configs/.phase3_hysteria.txt ]; then
             HYSTERIA_OUTPUT_FILE=.ru_hysteria_part HYSTERIA_OUTPUT_DIR=configs \
