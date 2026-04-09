@@ -15,18 +15,12 @@ on:
     branches: [main]
   workflow_dispatch:
     # Ручной запуск из вкладки Actions
-    inputs:
-      phone_proxy_url:
-        description: "URL прокси телефона (если пусто — прямой маршрут GitHub)"
-        required: false
-        type: string
 
 concurrency:
   group: xraycheck-serial
   cancel-in-progress: false
 
 env:
-  DEBUG_PROXY_IP: 'true'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   MODE: merge
   LINKS_FILE: links.txt
@@ -111,6 +105,21 @@ jobs:
           ref: main
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Connect to Tailscale (Exit Node)
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          args: --exit-node=100.93.1.84 --exit-node-allow-lan-access=true
+
+      - name: Verify Tailscale connection
+        run: |
+          echo "=== Tailscale Status ==="
+          tailscale status
+          echo ""
+          echo "=== Current IP (should be from Russia) ==="
+          curl -s https://ipinfo.io/json | jq '.' || echo "Failed to get IP info"
+          echo ""
 
       - name: Update cidrlist from CIDR_WHITELIST_URL (if changed)
         id: update_cidrlist
@@ -213,6 +222,21 @@ jobs:
           ref: main
           fetch-depth: 1
 
+      - name: Connect to Tailscale (Exit Node)
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          args: --exit-node=100.93.1.84 --exit-node-allow-lan-access=true
+
+      - name: Verify Tailscale connection
+        run: |
+          echo "=== Tailscale Status ==="
+          tailscale status
+          echo ""
+          echo "=== Current IP (should be from Russia) ==="
+          curl -s https://ipinfo.io/json | jq '.' || echo "Failed to get IP info"
+          echo ""
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -258,18 +282,13 @@ jobs:
             notworkers-db-${{ github.ref_name }}-
             notworkers-db-
 
-      - name: Prepare links.txt (secret or repository file)
+      - name: Create links.txt from secret
         run: |
-          if [ -n "$LINKS_FILE_CONTENT" ]; then
-            printf '%s' "$LINKS_FILE_CONTENT" > links.txt
-            echo "links.txt loaded from secret LINKS_FILE_CONTENT"
-          elif [ -s "links.txt" ]; then
-            echo "::warning::Secret LINKS_FILE_CONTENT is not set; using repository links.txt"
-          else
-            echo "::error::LINKS_FILE_CONTENT is empty and repository links.txt is missing/empty."
-            echo "::error::Set secret LINKS_FILE_CONTENT or commit a non-empty links.txt."
+          if [ -z "$LINKS_FILE_CONTENT" ]; then
+            echo "::error::Secret LINKS_FILE_CONTENT is not set. Add it in Settings - Secrets and variables - Actions."
             exit 1
           fi
+          printf '%s' "$LINKS_FILE_CONTENT" > links.txt
         env:
           LINKS_FILE_CONTENT: ${{ secrets.LINKS_FILE_CONTENT }}
 
@@ -388,7 +407,6 @@ jobs:
 
       - name: Filter excluded endpoints
         env:
-          # Переменная репозитория (Settings → Variables): EXCLUDE_ENDPOINTS - построчно host:port или host (исключить из проверки).
           EXCLUDE_ENDPOINTS: ${{ vars.EXCLUDE_ENDPOINTS }}
           EXCLUDE_ENDPOINTS_LOG_DETAILS: "false"
         run: |
@@ -475,64 +493,26 @@ jobs:
           print(f'RU split: xray main={bx} ru={rx}; hysteria main={bh} ru={rh}')
           "
 
-      - name: Connect to Tailscale (auto, non-blocking)
-        id: ts_connect
-        if: ${{ inputs.phone_proxy_url != '' || vars.PHONE_PROXY_URL != '' }}
-        continue-on-error: true
-        uses: tailscale/github-action@v2
-        with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-
-      - name: "Auto route: phone proxy first, GitHub direct fallback"
-        id: route_select
-        run: |
-          set -euo pipefail
-          PROXY_URL="${{ inputs.phone_proxy_url || vars.PHONE_PROXY_URL }}"
-          echo "=== Network bootstrap ==="
-          if [ -z "${PROXY_URL}" ]; then
-            echo "::notice::PHONE_PROXY_URL не задан. Работаем напрямую."
-            exit 0
-          fi
-          if PROXY_IP="$(curl -fsS --max-time 30 -x "${PROXY_URL}" https://ifconfig.me)"; then
-            echo "HTTP_PROXY=${PROXY_URL}" >> "$GITHUB_ENV"
-            echo "HTTPS_PROXY=${PROXY_URL}" >> "$GITHUB_ENV"
-            echo "ALL_PROXY=${PROXY_URL}" >> "$GITHUB_ENV"
-            echo "::notice::Phone proxy is active. IP: ${PROXY_IP}"
-          else
-            echo "::warning::Phone proxy is unavailable."
-          fi
-
       - name: Xray fast screen (phase 1)
         env:
           MODE: single
           CHECKER_DIAG_FAILURE_TYPES: 'true'
           CHECKER_DIAG_FAILURE_TOP_N: '5'
-          # Отключаем update notworkers (скорость и чтобы фаза 1 не влияла на отбор фазы 2).
           NOTWORKERS_UPDATE_ENABLED: 'false'
-          # Кандидаты формируем мягче, чтобы не отбрасывать живые ключи слишком рано.
           STRICT_MODE_REQUIRE_ALL: 'false'
           TRANSIENT_RETRY_COUNT: '1'
-
-          # Параметры "экран": быстрее/мягче, как в notworkers-actualize.yml
           STRONG_ATTEMPTS: '1'
           STRONG_STYLE_TIMEOUT: '3'
-          # Подрезаем минимумы connect/read внутри STRONG_STYLE_TEST, чтобы
-          # плохие ключи быстрее “выдыхались”, но phase 2 оставалась строгой.
           STRONG_STYLE_CONNECT_T_MIN: '1'
           STRONG_STYLE_READ_T_MIN: '2'
           STRONG_MAX_RESPONSE_TIME: '1.5'
-
           XRAY_STARTUP_WAIT: '1.5'
           XRAY_PORT_WAIT: '5'
-
           STABILITY_CHECKS: '1'
           STABILITY_CHECK_DELAY: '0.5'
-
           REQUESTS_PER_URL: '2'
           MIN_SUCCESSFUL_REQUESTS: '2'
           MIN_SUCCESSFUL_URLS: '1'
-
-          # output file для фазы 1 (кандидаты, затем фаза 2 перезапишет configs/available)
           OUTPUT_FILE: available_phase1_candidates
         run: |
           set -e
@@ -564,7 +544,6 @@ jobs:
           NOTWORKERS_UPDATE_ENABLED: 'false'
           CHECKER_DIAG_FAILURE_TYPES: 'true'
           CHECKER_DIAG_FAILURE_TOP_N: '5'
-          # Мягче фазы 1 и общего daily-check: см. doc/NEW_ru-config-ci-error-analysis.md
           STRICT_MODE_REQUIRE_ALL: 'false'
           STRICT_MODE: 'false'
           TRANSIENT_RETRY_COUNT: '3'
@@ -595,7 +574,6 @@ jobs:
         run: |
           set -e
           mkdir -p configs
-          # Сохранить предыдущий ru из репозитория для ретеста вместе с новыми RU-кандидатами (файл может отсутствовать или быть пустым).
           PREV_RU="configs/.ru_prev_for_phase3"
           if [ -f "configs/ru" ] && [ -s "configs/ru" ]; then
             cp "configs/ru" "$PREV_RU"
@@ -604,8 +582,6 @@ jobs:
             : > "$PREV_RU"
             echo "Phase3: no previous configs/ru (missing or empty), merge only new RU candidates"
           fi
-          # Важно: перед merge прогоняем предыдущий ru через тот же geo-only фильтр,
-          # чтобы не удерживать/возвращать в configs/ru ключи с не-RU endpoint IP.
           if [ -s "$PREV_RU" ]; then
             PREV_RU_GEO="configs/.ru_prev_for_phase3.geo"
             PREV_RU_TMP="configs/.ru_prev_for_phase3.cidr_geo.tmp"
@@ -674,8 +650,6 @@ jobs:
                   out.append(line)
               return out
 
-          # В phase3 проверяем только новые RU-кандидаты;
-          # предыдущий configs/ru накапливается позже, без ретеста.
           prev = read_lines('configs/.ru_prev_for_phase3')
           x_new = read_lines('configs/xray_ru_candidates.txt')
           h_new = read_lines('configs/hysteria_ru_candidates.txt')
@@ -761,9 +735,6 @@ jobs:
               return ns
 
           parts = []
-          # Накапливаем configs/ru между запусками:
-          # сначала результаты текущего прогона (новые должны быть первыми),
-          # затем предыдущий configs/ru (после geo-only фильтра, см. выше) - в конец.
           prev_ru = read_lines('configs/.ru_prev_for_phase3')
           for p in ('configs/ru', 'configs/.ru_hysteria_part'):
               parts.extend(read_lines(p))
@@ -889,7 +860,6 @@ jobs:
               print(f'SQLite notworkers (Xray URL step): total_before={total_before}, '
                     f'merged_lines={len(merged_lines)}, passed_ok={len(passed_norm)}, '
                     f'failed_to_add={len(failed_normalized_to_full)}')
-              # сначала убираем успешно прошедшие Xray из notworkers
               for norm in passed_norm:
                   if not norm:
                       continue
@@ -986,7 +956,6 @@ jobs:
               print(f'SQLite notworkers (Hysteria URL step): total_before={total_before}, '
                     f'merged_lines={len(merged_lines)}, passed_ok={len(passed_norm)}, '
                     f'failed_to_add={len(failed_normalized_to_full)}')
-              # сначала убираем успешно прошедшие из notworkers
               for norm in passed_norm:
                   if not norm:
                       continue
@@ -1154,13 +1123,6 @@ jobs:
           else
             echo "configs/notworkers.db not found, skip prune"
           fi
-
-      - name: Disable proxy to allow Git push and caches
-        if: always()
-        run: |
-          echo "HTTP_PROXY=" >> "$GITHUB_ENV"
-          echo "HTTPS_PROXY=" >> "$GITHUB_ENV"
-          echo "ALL_PROXY=" >> "$GITHUB_ENV"
 
       - name: Commit and push configs/available, configs/available(top100), configs/ru, configs/ru(top100)
         run: |
